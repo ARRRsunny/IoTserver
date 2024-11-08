@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Graphs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin-right: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sensor Graphs</h1>
+    <button onclick="loadGraph('duration')">Load Duration Graph</button>
+    <button onclick="loadGraph('moisture')">Load Moisture Graph</button>
+    <button onclick="loadGraph('present')">Load Present Graph</button>
+    <button onclick="loadGraph('wet_area')">Load Wet Area Graph</button>
+    <button onclick="loadGraph('last_record_duration')">Load Last Record Duration Graph</button>
+
+    <div id="graph-container">
+        <p>Select a graph to display.</p>
+    </div>
+    <div id = "jsoninput">
+        <input type="text" id = "input"/>
+        <button onclick=""
+    </div>
+    </body>
+
+    <script>
+        const ADDR = window.location.host;
+        console.log(ADDR);
+        function loadGraph(graphType) {
+            const container = document.getElementById('graph-container');
+            container.innerHTML = `<p>Loading ${graphType} graph...</p>`;
+            
+            
+            fetch(`${ADDR}/get-graph/${graphType}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    container.innerHTML = `<img src="${url}" alt="${graphType} graph">`;
+                })
+                .catch(error => {
+                    container.innerHTML = `<p>Error loading graph: ${error.message}</p>`;
+                });
+        }
+
+        function sendJson() {
+            const text = document.getElementById('input').value;
+            let jsonData;
+
+            try {
+                jsonData = JSON.parse(text);
+            } catch (error) {
+                alert('Invalid JSON');
+                return;
+            }
+
+            fetch(`${ADDR}/submit-data`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(jsonData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
