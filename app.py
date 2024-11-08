@@ -149,7 +149,7 @@ def generate_graphs():
 
 @app.route('/get-graph/<graph_type>', methods=['GET'])
 def get_graph(graph_type):
-    graph_file = f'{graph_type}_graph.png'
+    graph_file = os.path.join(GRAPH_DIR, f'{graph_type}_graph.png')
     if not os.path.exists(graph_file):
         return jsonify({'error': f'{graph_type} graph not found. Generate it first.'}), 404
     

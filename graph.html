@@ -47,6 +47,20 @@
             const container = document.getElementById('graph-container');
             container.innerHTML = `<p>Loading ${graphType} graph...</p>`;
 
+            fetch(`${BASE_URL}/generate-graphs`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response error');  
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data);
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                });
+
             fetch(`${BASE_URL}/get-graph/${graphType}`)
                 .then(response => { 
                     if (!response.ok) {
