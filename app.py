@@ -36,7 +36,7 @@ def daily_task():
 @app.route('/', methods=['GET'])
 def serve_html():
     try:
-        url = "https://raw.githubusercontent.com/ARRRsunny/music-player/refs/heads/main/musicplayer_server.html"
+        url = "https://raw.githubusercontent.com/ARRRsunny/IoTserver/refs/heads/main/graph.html"
         with ul.urlopen(url) as client:
             htmldata = client.read().decode('utf-8')
         return htmldata
