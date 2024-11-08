@@ -19,6 +19,9 @@
             margin-right: 5px;
             cursor: pointer;
         }
+        #jsoninput {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -32,22 +35,20 @@
     <div id="graph-container">
         <p>Select a graph to display.</p>
     </div>
-    <div id = "jsoninput">
-        <input type="text" id = "input"/>
+    <div id="jsoninput">
+        <input type="text" id="input" placeholder='Enter JSON here' />
         <button onclick="sendJson()">Click to send</button>
     </div>
-    </body>
 
     <script>
-        const ADDR = window.location.host;
-        console.log(ADDR);
+        const BASE_URL = window.location.origin;
+
         function loadGraph(graphType) {
             const container = document.getElementById('graph-container');
             container.innerHTML = `<p>Loading ${graphType} graph...</p>`;
-            
-            
-            fetch(`${ADDR}/get-graph/${graphType}`)
-                .then(response => {
+
+            fetch(`${BASE_URL}/get-graph/${graphType}`)
+                .then(response => { 
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
                     }
@@ -73,7 +74,7 @@
                 return;
             }
 
-            fetch(`${ADDR}/submit-data`, {
+            fetch(`${BASE_URL}/submit-data`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
