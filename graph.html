@@ -50,15 +50,15 @@
             fetch(`${BASE_URL}/generate-graphs`)
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error('Network response error');  
+                        throw new Error('Network response error');
                     }
                     return response.json();
                 })
                 .then(data => {
-                    console.log(data);
+                    console.log('Graph data:', data);
                 })
                 .catch(error => {
-                    console.error('Fetch error:', error);
+                    console.error('Fetch error (generate-graphs):', error);
                 });
 
             fetch(`${BASE_URL}/get-graph/${graphType}`)
@@ -74,6 +74,7 @@
                 })
                 .catch(error => {
                     container.innerHTML = `<p>Error loading graph: ${error.message}</p>`;
+                    console.error('Fetch error (get-graph):', error);
                 });
         }
 
@@ -85,6 +86,7 @@
                 jsonData = JSON.parse(text);
             } catch (error) {
                 alert('Invalid JSON');
+                console.error('JSON parse error:', error);
                 return;
             }
 
@@ -95,12 +97,17 @@
                 },
                 body: JSON.stringify(jsonData)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to submit data');
+                }
+                return response.json();
+            })
             .then(data => {
                 console.log('Success:', data);
             })
             .catch((error) => {
-                console.error('Error:', error);
+                console.error('Error submitting JSON:', error);
             });
         }
     </script>
