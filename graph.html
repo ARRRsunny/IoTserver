@@ -119,7 +119,14 @@
                 <button onclick="clearInput()">Clear Inputs</button>
             </div>
         </section>
-
+        <section id="email">
+            <h2>Email</h2>
+            <div id="emailbut">
+                <input type="text" id="emailaddr" placeholder='enter email address receive report' />
+                <button onclick="sendReportToEmail()">Click to send email report</button>
+                <button onclick="sendEmailaddr()">Click to send email address</button>
+            </div>
+        </section>
         <section id="data">
             <h2>Sensor Data</h2>
             <div>
@@ -155,6 +162,69 @@
                 .catch(error => {
                     container.innerHTML = `<p>Error loading graph: ${error.message}</p>`;
                 });
+        }
+        function sendReportToEmail() {
+            const request = new XMLHttpRequest();
+            request.open('GET', `${BASE_URL}/get-emailrepo`, true);
+            request.onload = function() {
+                if (request.status >= 200 && request.status < 400) {
+                    console.log('Report sent successfully');
+                } else {
+                    console.error('Error sending report:', request.statusText);
+                }
+            };
+            request.onerror = function() {
+                console.error('Request failed');
+            };
+            request.send();
+        }
+
+        function updateEmailDisplay() {
+            fetch(`${BASE_URL}/getemail`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+                const emailInput = document.getElementById('emailaddr');
+                emailInput.value = data.email || '';
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+
+        function sendEmailaddr() {
+            const emailInput = document.getElementById('emailaddr');
+            var emailData = { "email": `${emailInput.value}` };
+            console.log(emailData)
+            fetch(`${BASE_URL}/getemail`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(emailData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
         }
 
         function getData(event) {
@@ -221,6 +291,7 @@
             document.getElementById('moisture').value = '';
             document.getElementById('lastRecordDuration').value = '';
         }
+        updateEmailDisplay()
     </script>
 </body>
 </html>

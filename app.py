@@ -18,8 +18,8 @@ import matplotlib.pyplot as plt
 import urllib.request as ul
 # Email credentials
 
-email_user = "example@gmail.com"       #use google app password
-email_pass = "password" 
+email_user = "example@gmail.com" #use google app password
+email_pass = "password"
 email_receiver = "example2@gmail.com"
 
 DATA_DIR = 'data'
@@ -77,6 +77,7 @@ def calculate_averages(sensor_data):
 
 def weekly_task():
     logging.debug("prepare weekly report")
+    
     today = datetime.now()
     graph_files = []
     last_week_data = get_last_week_data()
@@ -121,9 +122,15 @@ def generate_combined_graph(sensor_data, date_label):
     return graph_file
 
 def send_email_with_averages_and_graph(averages,graph_files):
+    if read_email()!=None:
+        email_addr = read_email()
+    else:
+        email_addr = email_receiver
+    logging.debug(read_email())
+    logging.debug(email_addr)
     msg = MIMEMultipart()
     msg['From'] = email_user
-    msg['To'] = email_receiver
+    msg['To'] = email_addr
     msg['Subject'] = 'Weekly Sensor Data Summary'
 
     body = (
@@ -243,6 +250,41 @@ def send_email():
     weekly_task()
     return jsonify({'message': 'Email sent successfully'})
 
+@app.route('/getemail', methods=['POST', 'GET'])
+def get_email():
+    if request.method == 'POST':
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        if 'email' not in data or not isinstance(data['email'], str):
+            return jsonify({'error': 'Invalid data format. Expected {"email": "emailstr"}'}), 400
+
+        email_data_file = os.path.join('email_data.json')
+        with open(email_data_file, 'w') as f:
+            json.dump(data, f, indent=4)
+
+        return jsonify({'message': 'Email received and stored successfully'}), 201
+
+    elif request.method == 'GET':
+        email_data_file = os.path.join('email_data.json')
+        if not os.path.exists(email_data_file):
+            return jsonify({'email': ''}), 200
+
+        with open(email_data_file, 'r') as f:
+            email_data = json.load(f)
+
+        return jsonify(email_data), 200
+
+def read_email(): 
+    email_data_file = os.path.join('email_data.json') 
+    if os.path.exists(email_data_file): 
+        with open(email_data_file, 'r') as f:
+            data = json.load(f) 
+            logging.debug(data.get('email'))
+            return data.get('email') 
+    return None
+
 def save_graph(fig, filename):
     path = os.path.join(GRAPH_DIR, filename)
     fig.savefig(path)
@@ -254,4 +296,4 @@ if __name__ == '__main__':
     scheduler.add_job(daily_task, 'cron', hour=0, minute=0)            #updata data 
     scheduler.add_job(weekly_task, 'cron', day_of_week='sun', hour=20, minute=0)    #Sunday 8.00pm sent report
     scheduler.start()
-    app.run(host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=8080,debug=True)
