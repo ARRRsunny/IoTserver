@@ -22,37 +22,54 @@
         #jsoninput {
             margin-top: 20px;
         }
+        #jsoninput input {
+            margin-bottom: 10px;
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        #graph-container, #datadis {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
     <h1>Sensor Graphs</h1>
-    <button onclick="loadGraph('duration')">Load Duration Graph</button>
-    <button onclick="loadGraph('moisture')">Load Moisture Graph</button>
-    <button onclick="loadGraph('present')">Load Present Graph</button>
-    <button onclick="loadGraph('wet_area')">Load Wet Area Graph</button>
-    <button onclick="loadGraph('last_record_duration')">Load Last Record Duration Graph</button>
-
+    <button onclick="loadGraph(event, 'duration')">Load Duration Graph</button>
+    <button onclick="loadGraph(event, 'moisture')">Load Moisture Graph</button>
+    <button onclick="loadGraph(event, 'present')">Load Present Graph</button>
+    <button onclick="loadGraph(event, 'wet_area')">Load Wet Area Graph</button>
+    <button onclick="loadGraph(event, 'last_record_duration')">Load Last Record Duration Graph</button>
     <div id="graph-container">
         <p>Select a graph to display.</p>
     </div>
+
+    <h1>Input</h1>
     <div id="jsoninput">
-        <input type="text" id="input" placeholder='Enter JSON here' />
-        <button onclick="sendJson()">Click to send</button>
+        <input type="text" id="present" placeholder='Present (true/false)' />
+        <input type="text" id="duration" placeholder='Duration (int)' />
+        <input type="text" id="wetArea" placeholder='Wet Area (true/false)' />
+        <input type="text" id="moisture" placeholder='Moisture (int)' />
+        <input type="text" id="lastRecordDuration" placeholder='Last Record Time Duration (int)' />
+        <button onclick="sendJson(event)">Click to send</button>
+    </div>
+
+    <h1>Sensor Data</h1>
+    <div>
+        <button onclick="getData(event)">Click to fetch</button>
+        <p id="datadis">Data will appear here</p>
     </div>
 
     <script>
         const BASE_URL = `http://${window.location.hostname}:8080`;
 
-        function loadGraph(graphType) {
+        function loadGraph(event, graphType) {
+            event.preventDefault();
             const container = document.getElementById('graph-container');
             container.innerHTML = `<p>Loading ${graphType} graph...</p>`;
-            
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', `${BASE_URL}/generate-graphs`, true);
-            xhr.send();
 
             fetch(`${BASE_URL}/get-graph/${graphType}`)
-                .then(response => { 
+                .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
                     }
@@ -67,16 +84,40 @@
                 });
         }
 
-        function sendJson() {
-            const text = document.getElementById('input').value;
-            let jsonData;
+        function getData(event) {
+            event.preventDefault();
+            const datadis = document.getElementById('datadis');
+            datadis.innerHTML = `<p>Loading data...</p>`;
+            fetch(`${BASE_URL}/get-data`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    datadis.innerHTML = `<p>${JSON.stringify(data)}</p>`;
+                })
+                .catch(error => {
+                    datadis.innerHTML = `<p>Error fetching data: ${error.message}</p>`;
+                });
+        }
 
-            try {
-                jsonData = JSON.parse(text);
-            } catch (error) {
-                alert('Invalid JSON');
-                return;
-            }
+        function sendJson(event) {
+            event.preventDefault();
+            const present = document.getElementById('present').value.toLowerCase() === 'true';
+            const duration = parseInt(document.getElementById('duration').value, 10);
+            const wetArea = document.getElementById('wetArea').value.toLowerCase() === 'true';
+            const moisture = parseInt(document.getElementById('moisture').value, 10);
+            const lastRecordDuration = parseInt(document.getElementById('lastRecordDuration').value, 10);
+
+            const jsonData = {
+                "Present": present,
+                "duration": duration,
+                "wet area": wetArea,
+                "moisture": moisture,
+                "last record time duration": lastRecordDuration
+            };
 
             fetch(`${BASE_URL}/submit-data`, {
                 method: 'POST',
@@ -85,7 +126,12 @@
                 },
                 body: JSON.stringify(jsonData)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 console.log('Success:', data);
             })
