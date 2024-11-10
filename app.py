@@ -1,14 +1,17 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, abort
 from flask_cors import CORS
-import matplotlib.pyplot as plt
 import os
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
-import os
 import urllib.request as ul
 import logging
-from flask import Flask, jsonify, abort, send_file
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
+# Rest of your code
+
 DATA_DIR = 'data'
 GRAPH_DIR = 'graphs'
 
@@ -16,7 +19,7 @@ os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(GRAPH_DIR, exist_ok=True)
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)
 
 scheduler = BackgroundScheduler()
 
@@ -65,93 +68,50 @@ def submit_data():
 
     return jsonify({'message': 'Data saved successfully'}), 201
 
-def generate_individual_graphs(sensor_data, date_label):
+def generate_graph(sensor_data, graph_type, date_label):
     times = [entry['time'] for entry in sensor_data]
-    graph_files = []
+    data_map = {
+        'duration': [entry['duration'] for entry in sensor_data],
+        'moisture': [entry['moisture'] for entry in sensor_data],
+        'present': [1 if entry['Present'] else 0 for entry in sensor_data],
+        'wet_area': [1 if entry['wet area'] else 0 for entry in sensor_data],
+        'last_record_duration': [entry['last record time duration'] for entry in sensor_data],
+    }
 
-    # Ensure the graph directory exists
-    os.makedirs(GRAPH_DIR, exist_ok=True)
+    y_data = data_map.get(graph_type)
+    if y_data is None:
+        return None
 
-    # Duration graph
-    durations = [entry['duration'] for entry in sensor_data]
-    fig = plt.figure()
-    plt.plot(times, durations, marker='o', label='Duration (s)')
-    plt.title(f'Duration Over Time - {date_label}')
-    plt.xlabel('Time')
-    plt.ylabel('Duration (seconds)')
+    fig, ax = plt.subplots()
+    
+    # Plot without connecting lines for 'duration' and 'present'
+    if graph_type in ['duration', 'present']:
+        ax.scatter(times, y_data)
+    else:
+        ax.plot(times, y_data, marker='o')
+
+    ax.set_title(f'{graph_type.capitalize()} Over Time - {date_label}')
+    ax.set_xlabel('Time')
+    ax.set_ylabel(graph_type.capitalize())
     plt.xticks(rotation=45)
     plt.tight_layout()
-    duration_graph = save_graph(fig, 'duration_graph.png')
-    graph_files.append(duration_graph)
+    graph_file = save_graph(fig, f'{graph_type}_graph.png')
+    return graph_file
 
-    # Moisture graph
-    moistures = [entry['moisture'] for entry in sensor_data]
-    fig = plt.figure()
-    plt.plot(times, moistures, marker='x', color='r', label='Moisture')
-    plt.title(f'Moisture Over Time - {date_label}')
-    plt.xlabel('Time')
-    plt.ylabel('Moisture')
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    moisture_graph = save_graph(fig, 'moisture_graph.png')
-    graph_files.append(moisture_graph)
-
-    # Present graph
-    presents = [1 if entry['Present'] else 0 for entry in sensor_data]
-    fig = plt.figure()
-    plt.plot(times, presents, marker='s', color='g', label='Present')
-    plt.title(f'Presence Over Time - {date_label}')
-    plt.xlabel('Time')
-    plt.ylabel('Present (1=True, 0=False)')
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    present_graph = save_graph(fig, 'present_graph.png')
-    graph_files.append(present_graph)
-
-    # Wet area graph
-    wet_areas = [1 if entry['wet area'] else 0 for entry in sensor_data]
-    fig = plt.figure()
-    plt.plot(times, wet_areas, marker='d', color='b', label='Wet Area')
-    plt.title(f'Wet Area Over Time - {date_label}')
-    plt.xlabel('Time')
-    plt.ylabel('Wet Area (1=True, 0=False)')
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    wet_area_graph = save_graph(fig, 'wet_area_graph.png')
-    graph_files.append(wet_area_graph)
-
-    # Last record time duration graph
-    last_record_durations = [entry['last record time duration'] for entry in sensor_data]
-    fig = plt.figure()
-    plt.plot(times, last_record_durations, marker='^', color='m', label='Last Record Time')
-    plt.title(f'Last Record Time Duration Over Time - {date_label}')
-    plt.xlabel('Time')
-    plt.ylabel('Duration (hours)')
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    last_record_graph = save_graph(fig, 'last_record_duration_graph.png')
-    graph_files.append(last_record_graph)
-
-    return graph_files
-
-@app.route('/generate-graphs', methods=['GET'])
-def generate_graphs():
+@app.route('/get-graph/<graph_type>', methods=['GET'])
+def get_graph(graph_type):
     data_file = get_data_file()
     with open(data_file, 'r') as f:
         sensor_data = json.load(f)
-    
+
     if not sensor_data:
         return jsonify({'error': 'No data available to plot'}), 400
 
     date_label = datetime.now().strftime('%d-%m-%Y')
-    graph_files = generate_individual_graphs(sensor_data, date_label)
-    return jsonify({'message': 'Graphs generated successfully', 'graphs': graph_files}), 200
-
-@app.route('/get-graph/<graph_type>', methods=['GET'])
-def get_graph(graph_type):
-    graph_file = os.path.join(GRAPH_DIR, f'{graph_type}_graph.png')
-    if not os.path.exists(graph_file):
-        return jsonify({'error': f'{graph_type} graph not found. Generate it first.'}), 404
+    graph_file = generate_graph(sensor_data, graph_type, date_label)
+    
+    if graph_file is None or not os.path.exists(graph_file):
+        return jsonify({'error': f'{graph_type} graph not found or failed to generate.'}), 404
     
     return send_file(graph_file, mimetype='image/png')
 
@@ -173,4 +133,4 @@ if __name__ == '__main__':
     initialize_data_storage()
     scheduler.add_job(daily_task, 'cron', hour=0, minute=0)
     scheduler.start()
-    app.run(host="192.168.194.251",port=8080,debug=True)
+    app.run(host='0.0.0.0', port=8080)

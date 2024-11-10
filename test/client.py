@@ -1,6 +1,6 @@
 import requests
 
-url = 'http://192.168.194.251:8080/submit-data'
+url = 'http://address/submit-data'
 data = {
     "Present": true,
     "duration": 130,
