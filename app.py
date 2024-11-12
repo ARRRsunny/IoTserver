@@ -16,7 +16,7 @@ matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
 import urllib.request as ul
-# Email credentials
+
 
 email_user = "example@gmail.com" #use google app password
 email_pass = "password"
@@ -24,7 +24,7 @@ email_receiver = "example2@gmail.com"
 
 DATA_DIR = 'data'
 GRAPH_DIR = 'graphs'
-
+EMAIL_DIR = 'email_data'
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(GRAPH_DIR, exist_ok=True)
 
@@ -56,23 +56,26 @@ def get_last_week_data():
             with open(filename, 'r') as f:
                 daily_data = json.load(f)
                 last_week_data.extend(daily_data)
-    print(f"Collected data for last week: {len(last_week_data)} entries")  # Debugging output
+    print(f"Collected data for last week: {len(last_week_data)} entries") 
     return last_week_data
 
 def calculate_averages(sensor_data):
-    if not sensor_data:
-        return None
-    
-    average_moisture = np.mean([entry['moisture'] for entry in sensor_data])
-    average_present = np.mean([1 if entry['Present'] else 0 for entry in sensor_data])
-    average_duration = np.mean([entry['duration'] for entry in sensor_data])
-    average_last_record_duration = np.mean([entry['last record time duration'] for entry in sensor_data])
+    # Filter out None values for each field
+    moisture_values = [entry['moisture'] for entry in sensor_data if entry['moisture'] is not None]
+    present_values = [1 if entry['Present'] else 0 for entry in sensor_data if entry['Present'] is not None]
+    duration_values = [entry['duration'] for entry in sensor_data if entry['duration'] is not None]
+    last_record_duration_values = [entry['last record time duration'] for entry in sensor_data if entry['last record time duration'] is not None]
+
+    average_moisture = np.mean(moisture_values) if moisture_values else 0
+    average_present = np.mean(present_values) if present_values else 0
+    average_duration = np.mean(duration_values) if duration_values else 0
+    average_last_record_duration = np.mean(last_record_duration_values) if last_record_duration_values else 0
 
     return {
         'average_moisture': average_moisture,
         'average_present': average_present,
         'average_duration': average_duration,
-        'average_last_record_duration': average_last_record_duration
+        'average_last_record_duration': average_last_record_duration,
     }
 
 def weekly_task():
@@ -94,10 +97,11 @@ def weekly_task():
                     graph_file = generate_combined_graph(daily_data, date_str)
                     graph_files.append(graph_file)
 
-    send_email_with_averages_and_graph(averages, graph_files)
+    send_email_with_averages_and_graph(averages, graph_files,email_user,email_pass,email_receiver)
 
 
-def generate_combined_graph(sensor_data, date_label):
+def generate_combined_graph(sensor_data, date_label, folder_path='graphs-day'):
+    os.makedirs(folder_path, exist_ok=True)
     times = [entry['time'] for entry in sensor_data]
     fig, axs = plt.subplots(4, 1, figsize=(10, 15))
 
@@ -116,17 +120,13 @@ def generate_combined_graph(sensor_data, date_label):
         ax.tick_params(axis='x', rotation=45)
     
     plt.tight_layout()
-    graph_file = f'combined_graph_{date_label}.png'
+    graph_file = os.path.join(folder_path, f'combined_graph_{date_label}.png')
     fig.savefig(graph_file)
     plt.close(fig)
     return graph_file
 
-def send_email_with_averages_and_graph(averages,graph_files):
-    if read_email()!=None:
-        email_addr = read_email()
-    else:
-        email_addr = email_receiver
-    logging.debug(read_email())
+def send_email_with_averages_and_graph(averages, graph_files, email_user, email_pass, email_receiver):
+    email_addr = read_email() or email_receiver
     logging.debug(email_addr)
     msg = MIMEMultipart()
     msg['From'] = email_user
@@ -147,7 +147,7 @@ def send_email_with_averages_and_graph(averages,graph_files):
             part = MIMEBase('application', 'octet-stream')
             part.set_payload(attachment.read())
             encoders.encode_base64(part)
-            part.add_header('Content-Disposition', f'attachment; filename= {graph_file}')
+            part.add_header('Content-Disposition', f'attachment; filename= {os.path.basename(graph_file)}')
             msg.attach(part)
 
     try:
@@ -155,9 +155,9 @@ def send_email_with_averages_and_graph(averages,graph_files):
             server.starttls()
             server.login(email_user, email_pass)
             server.send_message(msg)
-            logging.debug("report sent")
+            logging.debug("Report sent")
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        logging.error(f"Failed to send email: {e}")
 
 @app.route('/', methods=['GET'])
 def serve_html():
@@ -252,6 +252,10 @@ def send_email():
 
 @app.route('/getemail', methods=['POST', 'GET'])
 def get_email():
+    email_folder = EMAIL_DIR
+    os.makedirs(email_folder, exist_ok=True)
+    email_data_file = os.path.join(email_folder, 'email_data.json')
+
     if request.method == 'POST':
         data = request.get_json()
         if not data:
@@ -260,14 +264,12 @@ def get_email():
         if 'email' not in data or not isinstance(data['email'], str):
             return jsonify({'error': 'Invalid data format. Expected {"email": "emailstr"}'}), 400
 
-        email_data_file = os.path.join('email_data.json')
         with open(email_data_file, 'w') as f:
             json.dump(data, f, indent=4)
 
         return jsonify({'message': 'Email received and stored successfully'}), 201
 
     elif request.method == 'GET':
-        email_data_file = os.path.join('email_data.json')
         if not os.path.exists(email_data_file):
             return jsonify({'email': ''}), 200
 
@@ -275,9 +277,13 @@ def get_email():
             email_data = json.load(f)
 
         return jsonify(email_data), 200
+    
+@app.route('/email_reminder/<default_sin_ID>', methods=['GET'])
+def email_reminder(default_sin_ID):
+    pass
 
 def read_email(): 
-    email_data_file = os.path.join('email_data.json') 
+    email_data_file = os.path.join(EMAIL_DIR,'email_data.json') 
     if os.path.exists(email_data_file): 
         with open(email_data_file, 'r') as f:
             data = json.load(f) 
