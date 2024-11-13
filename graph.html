@@ -81,6 +81,13 @@
             bottom: 0;
             box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
         }
+        img {
+            width: 300px; 
+            height: auto; 
+            border: 2px solid #ddd; 
+            border-radius: 5px;  
+            padding: 5px; 
+            }
     </style>
 </head>
 <body>
@@ -91,7 +98,9 @@
     <nav>
         <a href="#graph">Graphs</a>
         <a href="#input">Input</a>
+        <a href="#email">Email</a>
         <a href="#data">Data</a>
+        <a href="#Photo">Photo</a>
     </nav>
 
     <main>
@@ -134,15 +143,66 @@
                 <p id="datadis">Data will appear here</p>
             </div>
         </section>
+        <section id="Photo">
+            <h2>Recent Photo</h2>
+            <img id="recent-photo" alt="No photo available">
+            <div>
+                <input type="file" id="photofile" name="file">
+                <button onclick="uploadpho()">Click to upload Photo</button>
+                <button onclick="getphoto()">Click to get photo</button>
+            </div>
+        </section>
     </main>
 
-    <footer>
-        <p>&copy; 2077 ARRRgraph. All rights reserved.</p>
-    </footer>
 
     <script>
         const BASE_URL = `http://${window.location.hostname}:8080`;
 
+        function uploadpho() {
+            const photoFile = document.getElementById('photofile');
+            
+            if (photoFile) {
+                const fileList = photoFile.files;
+                console.log(fileList);
+            
+                const formData = new FormData();
+                formData.append('file', fileList[0]);
+                
+                fetch(`${BASE_URL}/upload-photo`, {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+                
+                // Make sure `getphoto` is defined
+                if (typeof getphoto === 'function') {
+                    getphoto();
+                } else {
+                    console.error('getphoto function is not defined');
+                }
+            } else {
+                console.error('photofile element not found');
+            }
+        }
+
+
+
+
+        function getphoto(){
+            fetch(`${BASE_URL}/get_recphoto`).then(response => {
+                if(response.ok) {
+                    document.getElementById('recent-photo').src = response.url;
+                } else {
+                    document.getElementById('recent-photo').alt = 'No photo available';
+                }
+            });
+        }
         function loadGraph(event, graphType) {
             event.preventDefault();
             const container = document.getElementById('graph-container');
@@ -292,6 +352,7 @@
             document.getElementById('lastRecordDuration').value = '';
         }
         updateEmailDisplay()
+        getphoto()
     </script>
 </body>
 </html>
