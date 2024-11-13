@@ -125,15 +125,15 @@
                 <input type="text" id="moisture" placeholder='Moisture (int)' />
                 <input type="text" id="lastRecordDuration" placeholder='Last Record Time Duration (int)' />
                 <button onclick="sendJson(event)">Click to send</button>
-                <button onclick="clearInput()">Clear Inputs</button>
+                <button onclick="clearInput(event)">Clear Inputs</button>
             </div>
         </section>
         <section id="email">
             <h2>Email</h2>
             <div id="emailbut">
                 <input type="text" id="emailaddr" placeholder='enter email address receive report' />
-                <button onclick="sendReportToEmail()">Click to send email report</button>
-                <button onclick="sendEmailaddr()">Click to send email address</button>
+                <button onclick="sendReportToEmail(event)">Click to send email report</button>
+                <button onclick="sendEmailaddr(event)">Click to send email address</button>
             </div>
         </section>
         <section id="data">
@@ -148,8 +148,8 @@
             <img id="recent-photo" alt="No photo available">
             <div>
                 <input type="file" id="photofile" name="file">
-                <button onclick="uploadpho()">Click to upload Photo</button>
-                <button onclick="getphoto()">Click to get photo</button>
+                <button onclick="uploadpho(event)">Click to upload Photo</button>
+                <button onclick="getphoto(event)">Click to get photo</button>
             </div>
         </section>
     </main>
