@@ -165,6 +165,7 @@
     <main>
         <section id="graph">
             <h2>Graphs</h2>
+            <h4 id = "lasttimegone">last use is 0 mins before</h4>
             <button onclick="loadGraph(event, 'duration')">Load Duration Graph</button>
             <button onclick="loadGraph(event, 'moisture')">Load Moisture Graph</button>
             <button onclick="loadGraph(event, 'present')">Load Present Graph</button>
@@ -226,6 +227,26 @@
 
         const DebugSwitch = document.getElementById('debugswitch');
         DebugSwitch.addEventListener('change', debugswitching);
+
+        function updatalasttimegone() {
+            const lasttimegonetext = document.getElementById('lasttimegone');
+            console.log(1)
+            fetch(`${BASE_URL}/get-lastgone`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    lasttimegonetext.textContent = `Last use was ${Math.round(data["last record time duration"])} mins ago`;
+                })
+                .catch(error => {
+                    lasttimegonetext.textContent = `Error fetching data: ${error.message}`;
+                });
+        }
+        updatalasttimegone();
+        setInterval(updatalasttimegone, 60000);
 
         function debugswitching(event) {
             const debugEle = document.getElementsByClassName('debug');
