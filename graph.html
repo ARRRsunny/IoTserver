@@ -123,7 +123,7 @@
                 <input type="text" id="duration" placeholder='Duration (int)' />
                 <input type="text" id="wetArea" placeholder='Wet Area (true/false)' />
                 <input type="text" id="moisture" placeholder='Moisture (int)' />
-                <input type="text" id="lastRecordDuration" placeholder='Last Record Time Duration (int)' />
+                <input type="text" id="temperature" placeholder='temperature (int)' />
                 <button onclick="sendJson(event)">Click to send</button>
                 <button onclick="clearInput(event)">Clear Inputs</button>
             </div>
@@ -312,14 +312,14 @@
             const duration = parseInt(document.getElementById('duration').value, 10);
             const wetArea = document.getElementById('wetArea').value.toLowerCase() === 'true';
             const moisture = parseInt(document.getElementById('moisture').value, 10);
-            const lastRecordDuration = parseInt(document.getElementById('lastRecordDuration').value, 10);
+            const temperature = parseInt(document.getElementById('temperature').value, 10);
 
             const jsonData = {
                 "Present": present,
                 "duration": duration,
                 "wet area": wetArea,
                 "moisture": moisture,
-                "last record time duration": lastRecordDuration
+                "temperature": temperature
             };
 
             fetch(`${BASE_URL}/submit-data`, {
@@ -349,7 +349,7 @@
             document.getElementById('duration').value = '';
             document.getElementById('wetArea').value = '';
             document.getElementById('moisture').value = '';
-            document.getElementById('lastRecordDuration').value = '';
+            document.getElementById('temperature').value = '';
         }
         updateEmailDisplay()
         getphoto()
