@@ -195,6 +195,10 @@
                 <button onclick="sendReportToEmail(event)">Click to send email report</button>
                 <button onclick="sendEmailaddr(event)">Click to send email address</button>
             </div>
+            <section class='debug' id="email_reminder">
+                <button onclick="sendReminderToEmail(event,1)">Click to LongNoUse email reminder</button>
+                <button onclick="sendReminderToEmail(event,2)">Click to idk email reminder</button>
+            </section>
         </section>
         <section class='debug' id="data">
             <h2>Sensor Data</h2>
@@ -228,6 +232,21 @@
         const DebugSwitch = document.getElementById('debugswitch');
         DebugSwitch.addEventListener('change', debugswitching);
 
+        function sendReminderToEmail(event,ID){
+            const request = new XMLHttpRequest();
+            request.open('GET', `${BASE_URL}/email_reminder/${ID}`, true);
+            request.onload = function() {
+                if (request.status >= 200 && request.status < 400) {
+                    console.log('Report sent successfully');
+                } else {
+                    console.error('Error sending Reminder:', request.statusText);
+                }
+            };
+            request.onerror = function() {
+                console.error('Request failed');
+            };
+            request.send();
+        }
         function updatalasttimegone() {
             const lasttimegonetext = document.getElementById('lasttimegone');
             console.log(1)

@@ -18,18 +18,23 @@ import matplotlib.pyplot as plt
 import urllib.request as ul
 
 
-email_user = "example@gmail.com" #use google app password
+email_user = "example@gmail.com"
 email_pass = "password"
 email_receiver = "example2@gmail.com"
 
 DATA_DIR = 'data'
 GRAPH_DIR = 'graphs'
 EMAIL_DIR = 'email_data'
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(GRAPH_DIR, exist_ok=True)
 
 app = Flask(__name__)
 CORS(app)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 scheduler = BackgroundScheduler()
 
@@ -64,18 +69,18 @@ def calculate_averages(sensor_data):
     moisture_values = [entry['moisture'] for entry in sensor_data if entry['moisture'] is not None]
     present_values = [1 if entry['Present'] else 0 for entry in sensor_data if entry['Present'] is not None]
     duration_values = [entry['duration'] for entry in sensor_data if entry['duration'] is not None]
-    last_record_duration_values = [entry['last record time duration'] for entry in sensor_data if entry['last record time duration'] is not None]
+    temperature_values = [entry['temperature'] for entry in sensor_data if entry['temperature'] is not None]
 
     average_moisture = np.mean(moisture_values) if moisture_values else 0
     average_present = np.mean(present_values) if present_values else 0
     average_duration = np.mean(duration_values) if duration_values else 0
-    average_last_record_duration = np.mean(last_record_duration_values) if last_record_duration_values else 0
+    average_temperature = np.mean(temperature_values) if temperature_values else 0
 
     return {
         'average_moisture': average_moisture,
         'average_present': average_present,
         'average_duration': average_duration,
-        'average_last_record_duration': average_last_record_duration,
+        'average_temperature': average_temperature,
     }
 
 def weekly_task():
@@ -109,7 +114,7 @@ def generate_combined_graph(sensor_data, date_label, folder_path='graphs-day'):
         'Moisture': [entry['moisture'] for entry in sensor_data],
         'Present': [1 if entry['Present'] else 0 for entry in sensor_data],
         'Duration': [entry['duration'] for entry in sensor_data],
-        'Last Record Duration': [entry['last record time duration'] for entry in sensor_data],
+        'Temperature': [entry['temperature'] for entry in sensor_data],
     }
 
     for ax, (label, y_data) in zip(axs, data_map.items()):
@@ -138,7 +143,7 @@ def send_email_with_averages_and_graph(averages, graph_files, email_user, email_
         f"Average Moisture: {averages['average_moisture']:.2f}\n"
         f"Average Present Times per Day: {averages['average_present']:.2f}\n"
         f"Average Duration: {averages['average_duration']:.2f}\n"
-        f"Average Last Record Time Duration: {averages['average_last_record_duration']:.2f}\n"
+        f"Average Temperature: {averages['average_temperature']:.2f}\n"
     )
     msg.attach(MIMEText(body, 'plain'))
 
@@ -158,7 +163,43 @@ def send_email_with_averages_and_graph(averages, graph_files, email_user, email_
             logging.debug("Report sent")
     except Exception as e:
         logging.error(f"Failed to send email: {e}")
+        
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+@app.route('/upload-photo', methods=['POST'])
+def upload_photo():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    if file and allowed_file(file.filename):
+        now = datetime.now()
+        formatted_time = now.strftime("%S%M%H_%d%m%y")
+        filename = f"recentcap_{formatted_time}.jpg"
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        return jsonify({'message': 'File uploaded successfully'}), 201
+    else:
+        return jsonify({'error': 'Invalid file type'}), 400
+
+@app.route('/get_recphoto', methods=['GET'])
+def get_recphoto():
+    try:
+        files = os.listdir(app.config['UPLOAD_FOLDER'])
+        files = sorted(files, key=lambda x: os.path.getmtime(os.path.join(app.config['UPLOAD_FOLDER'], x)), reverse=True)
+        most_recent_file = files[0] if files else None
+
+        if most_recent_file:
+            return send_file(os.path.join(app.config['UPLOAD_FOLDER'], most_recent_file), download_name=most_recent_file, as_attachment=False)
+        else:
+            return jsonify({'error': 'No files available'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+    
 @app.route('/', methods=['GET'])
 def serve_html():
     try:
@@ -170,21 +211,44 @@ def serve_html():
         logging.error("Error serving HTML: %s", e)
         abort(500, "Internal server error")
 
+
 @app.route('/submit-data', methods=['POST'])
 def submit_data():
     data = request.get_json()
     if not data:
         return jsonify({'error': 'No data provided'}), 400
 
-    expected_keys = {"Present", "duration", "wet area", "moisture", "last record time duration"}
+    expected_keys = {"Present", "duration", "wet area", "moisture","temperature"}
     if not expected_keys.issubset(data.keys()):
         return jsonify({'error': 'Invalid data format'}), 400
 
-    data['time'] = datetime.now().strftime('%H:%M:%S')
+    now = datetime.now()
+    data['time'] = now.strftime('%H:%M:%S')
 
     data_file = get_data_file()
     with open(data_file, 'r+') as f:
         sensor_data = json.load(f)
+
+        # Find the most recent record where "Present" is true
+        last_present_time = None
+        for record in reversed(sensor_data):
+            if record['Present']:
+                last_present_time = datetime.strptime(record['time'], '%H:%M:%S')
+                break
+
+        # Calculate the last record time duration
+        if last_present_time:
+            if data['Present']:
+                last_record_duration = 0
+            else:
+                last_record_datetime = datetime.combine(now.date(), last_present_time.time())
+                time_diff = now - last_record_datetime
+                last_record_duration = time_diff.total_seconds() / 60  # Convert seconds to minutes      
+        else:
+            last_record_duration = 0
+
+        data['last record time duration'] = last_record_duration
+
         sensor_data.append(data)
         f.seek(0)
         json.dump(sensor_data, f, indent=4)
@@ -198,7 +262,7 @@ def generate_graph(sensor_data, graph_type, date_label):
         'moisture': [entry['moisture'] for entry in sensor_data],
         'present': [1 if entry['Present'] else 0 for entry in sensor_data],
         'wet_area': [1 if entry['wet area'] else 0 for entry in sensor_data],
-        'last_record_duration': [entry['last record time duration'] for entry in sensor_data],
+        'temperature': [entry['temperature'] for entry in sensor_data],
     }
 
     y_data = data_map.get(graph_type)
@@ -237,6 +301,30 @@ def get_graph(graph_type):
     
     return send_file(graph_file, mimetype='image/png')
 
+@app.route('/get-lastgone', methods=['GET'])
+def sendpasstime():
+    time = getpasstime()
+    return jsonify({"last record time duration":time})
+
+
+def getpasstime():
+    now = datetime.now()
+    data_file = get_data_file()
+    with open(data_file, 'r+') as f:
+            sensor_data = json.load(f)
+            last_present_time = None
+            for record in reversed(sensor_data):
+                if record['Present']:
+                    last_present_time = datetime.strptime(record['time'], '%H:%M:%S')
+                    break
+
+            if last_present_time:
+                last_record_datetime = datetime.combine(now.date(), last_present_time.time())
+                time_diff = now - last_record_datetime
+                last_record_duration = time_diff.total_seconds() / 60   
+            return last_record_duration
+            
+     
 @app.route('/get-data', methods=['GET'])
 def get_data():
     data_file = get_data_file()
@@ -280,8 +368,41 @@ def get_email():
     
 @app.route('/email_reminder/<default_sin_ID>', methods=['GET'])
 def email_reminder(default_sin_ID):
+    if default_sin_ID == "1":
+        LongNoUseWarning()
+        return jsonify({'message': 'LongNoUseWarning execute successfully'})
+    elif default_sin_ID == "2":
+        return jsonify({'message': 'idk execute successfully'})
+
+    return jsonify({'error': 'no corresponding ID'})
+
+def LLM_intergated_Report():
     pass
 
+def LongNoUseWarning():
+    email_addr = read_email() or email_receiver
+    logging.debug(email_addr)
+    msg = MIMEMultipart()
+    msg['From'] = email_user
+    msg['To'] = email_addr
+    msg['Subject'] = "Attention: The cat hasn't used the toilet for two hours."
+    body = (
+        f"It has been {round(getpasstime()/60,1)} hour(s) since your cat last used the toilet. It's important to monitor your pet's habits to ensure their health and well-being. Please check on your cat to make sure everything is alright."
+    )
+    msg.attach(MIMEText(body, 'plain'))
+    try:
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(email_user, email_pass)
+            server.send_message(msg)
+            logging.debug("Report sent")
+    except Exception as e:
+        logging.error(f"Failed to send email: {e}")
+
+def checktimepast():
+    if getpasstime() >= 120:
+        email_reminder("1")
+    
 def read_email(): 
     email_data_file = os.path.join(EMAIL_DIR,'email_data.json') 
     if os.path.exists(email_data_file): 
@@ -301,5 +422,6 @@ if __name__ == '__main__':
     initialize_data_storage()
     scheduler.add_job(daily_task, 'cron', hour=0, minute=0)            #updata data 
     scheduler.add_job(weekly_task, 'cron', day_of_week='sun', hour=20, minute=0)    #Sunday 8.00pm sent report
+    scheduler.add_job(checktimepast, 'interval', minutes=10)
     scheduler.start()
     app.run(host='0.0.0.0', port=8080,debug=True)
