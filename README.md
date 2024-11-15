@@ -1,129 +1,81 @@
-# Sensor Data and Graphs Server
+# Sensor Data Monitoring System
 
-## Overview
-
-This project is a Flask-based server that collects sensor data, generates graphs, and sends weekly email reports. It includes features for storing data in JSON files, generating graphs from the data, and sending emails with the graph attachments. The server also provides endpoints for submitting data, retrieving graphs, and fetching stored data.
+This project is a comprehensive sensor data monitoring system using Flask, Nginx, and Docker. It collects, processes, and visualizes sensor data, providing valuable insights through automated reports.
 
 ## Features
 
-- Collects and stores sensor data in JSON format.
-- Generates graphs based on the sensor data.
-- Sends a weekly email report with the generated graphs.
-- Provides a web interface to display graphs and input data.
-- API endpoints for submitting data, fetching data, and retrieving graphs.
+- **Data Collection**: Collects sensor data such as moisture, presence, duration, and temperature.
+- **Data Visualization**: Generates graphs to visualize sensor data trends over time.
+- **Automated Reporting**: Sends weekly reports via email with data summaries and graphs.
+- **LLM Generated Report**: The report sent to the user weekly is analyzed by llama3.1:8B.
+- **Photo Upload**: Allows uploading and retrieving recent photos.
+- **Email Notifications**: Sends reminders and alerts based on sensor data analysis.
 
 ## Requirements
 
+- Python 3.9
 - Docker
 - Docker Compose
+- Ollama
 
-## Installation
+## Setup
 
-1. Clone the repository:
-    ```bash
-    git clone https://github.com/yourusername/yourrepository.git
-    cd yourrepository
-    ```
+1. **Clone the Repository**
+   
+   ```bash
+   git clone https://github.com/yourusername/your-repo-name.git
+   cd your-repo-name
+   ```
 
-2. Set up email credentials:
-    Update the `email_user`, `email_pass`, and `email_receiver` variables in the script with your email credentials.
+3. **Environment Variables**
+   
+   Ensure you have your email credentials set up in `app.py` for sending emails:
+   ```python
+   email_user = "your-email@gmail.com"    #created by gmail app password
+   email_pass = "your-email-password"
+   email_receiver = "receiver-email@gmail.com"
+   ```
 
-    ```python
-    email_user = "your_email@gmail.com"
-    email_pass = "your_app_password"
-    email_receiver = "target_user_email@gmail.com"
-    ```
+4. **Build and Run Docker Containers**
+   
+   Use Docker Compose to build and run the containers:
+   ```bash
+   docker-compose up --build
+   ```
 
-3. Build and run the Docker containers:
-    ```bash
-    docker-compose up --build
-    ```
+5. **Access the Application**
+   
+   - The Flask application will be available at `http://localhost:8080`.
+   - The Nginx server will proxy requests at `http://localhost`.
+   - Configure the nginx.conf, set server_name to the address you want to use.
+     
+## UI
 
-4. **Important**: Update the Nginx `server_name` directive in the `nginx.conf` file with the IP address you want to use.
-
-## Usage
-
-1. Access the web interface:
-    Open your browser and go to the IP address you set in the Nginx `server_name` (e.g., `http://your-ip-address`) to view the web interface.
-
+- **UI**: `http://Youraddress:8080`
+  
 ## API Endpoints
 
-### Submit Data
+- **Upload Photo**: `POST /upload-photo`
+- **Get Recent Photo**: `GET /get_recphoto`
+- **Submit Sensor Data**: `POST /submit-data`
+- **Get Graph**: `GET /get-graph/<graph_type>`
+- **Get Data**: `GET /get-data`
+- **Send Email Report**: `GET /get-emailrepo`
+- **Set/Get Email**: `POST/GET /getemail`
+- **Email Reminder**: `GET /email_reminder/<default_sin_ID>`
 
-- **Endpoint**: `/submit-data`
-- **Method**: `POST`
-- **Description**: Submits sensor data to the server.
-- **Request Body**:
-    ```json
-    {
-        "Present": true,
-        "duration": 10,
-        "wet area": true,
-        "moisture": 30,
-        "last record time duration": 5
-    }
-    ```
+## Graph Types
 
-### Get Data
+- `duration`
+- `moisture`
+- `present`
+- `wet_area`
+- `temperature`
 
-- **Endpoint**: `/get-data`
-- **Method**: `GET`
-- **Description**: Fetches the stored sensor data.
-- **Response**:
-    ```json
-    [
-        {
-            "Present": true,
-            "duration": 10,
-            "wet area": true,
-            "moisture": 30,
-            "last record time duration": 5,
-            "time": "12:00:00"
-        },
-        ...
-    ]
-    ```
+## Contributing
 
-### Get Graph
+Contributions are welcome! Please open an issue or submit a pull request.
 
-- **Endpoint**: `/get-graph/<graph_type>`
-- **Method**: `GET`
-- **Description**: Retrieves the graph for the specified type.
-- **Response**: Returns the graph image.
+## License
 
-### Get Email Report
-
-- **Endpoint**: `/get-emailrepo`
-- **Method**: `GET`
-- **Description**: Sends the weekly email report with the generated graphs.
-- **Response**:
-    ```json
-    {
-        "message": "Email sent successfully"
-    }
-    ```
-
-### Submit Email Address
-
-- **Endpoint**: `/getemail`
-- **Method**: `POST`
-- **Description**: Receives the user's email address and stores it in a new JSON file.
-- **Request Body**:
-    ```json
-    {
-        "email": "emailstr"
-    }
-    ```
-
-### Fetch Stored Email Address
-
-- **Endpoint**: `/getemail`
-- **Method**: `GET`
-- **Description**: Fetches the stored email address from the server.
-- **Response**:
-    ```json
-    {
-        "email": "emailstr"
-    }
-    ```
-
+This project is licensed under the Sunny License.
