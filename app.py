@@ -12,6 +12,7 @@ from flask_cors import CORS
 from apscheduler.schedulers.background import BackgroundScheduler
 import logging
 import matplotlib
+import ollama
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
@@ -138,13 +139,7 @@ def send_email_with_averages_and_graph(averages, graph_files, email_user, email_
     msg['To'] = email_addr
     msg['Subject'] = 'Weekly Sensor Data Summary'
 
-    body = (
-        f"Weekly Averages:\n"
-        f"Average Moisture: {averages['average_moisture']:.2f}\n"
-        f"Average Present Times per Day: {averages['average_present']:.2f}\n"
-        f"Average Duration: {averages['average_duration']:.2f}\n"
-        f"Average Temperature: {averages['average_temperature']:.2f}\n"
-    )
+    body = (LLM_intergated_Report())
     msg.attach(MIMEText(body, 'plain'))
 
     for graph_file in graph_files:
@@ -372,12 +367,64 @@ def email_reminder(default_sin_ID):
         LongNoUseWarning()
         return jsonify({'message': 'LongNoUseWarning execute successfully'})
     elif default_sin_ID == "2":
+        TooDirtyWarning()
         return jsonify({'message': 'idk execute successfully'})
 
     return jsonify({'error': 'no corresponding ID'})
 
 def LLM_intergated_Report():
-    pass
+    # Collect the last week's sensor data
+    last_week_data = get_last_week_data()
+    averages = calculate_averages(last_week_data)
+
+    # Prepare the summary of data to send to the LLM
+    summary = (
+        f"Weekly Data Summary:\n"
+        f"- Average Moisture: {averages['average_moisture']:.2f}\n"
+        f"- Average Present Times per Day: {averages['average_present']:.2f}\n"
+        f"- Average Duration: {averages['average_duration']:.2f}\n"
+        f"- Average Temperature: {averages['average_temperature']:.2f}\n"
+    )
+
+    # Send the summary to the LLM model
+    response = ollama.chat(model='llama3.1:8b', messages=[
+        {
+            'role': 'system',
+            'content': 'Generate a detailed weekly report formatted for direct user communication. start with "Dear Cat Owner.", analyze the data and give some medical insight and recommendation to the owners about his/her cat.'
+        },
+        {
+            'role': 'user',
+            'content': summary
+        }
+    ])
+
+    # Extract the generated report
+    generated_report = response['message']['content']
+
+    return generated_report
+
+
+def TooDirtyWarning():
+    # Example function to send the report via email
+    email_addr = read_email() or email_receiver
+    msg = MIMEMultipart()
+    msg['From'] = email_user
+    msg['To'] = email_addr
+    msg['Subject'] = 'Attention:  Cat Toilet Needs Immediate Cleaning!'
+    body = (
+        "I wanted to bring to your attention that the cat toilet has become quite dirty and needs immediate cleaning. It’s important for the health and comfort of our cat to maintain a clean environment."
+    )
+    msg.attach(MIMEText(body, 'plain'))
+
+    try:
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(email_user, email_pass)
+            server.send_message(msg)
+            logging.debug("Report sent successfully")
+    except Exception as e:
+        logging.error(f"Failed to send email: {e}")
+
 
 def LongNoUseWarning():
     email_addr = read_email() or email_receiver
@@ -385,7 +432,7 @@ def LongNoUseWarning():
     msg = MIMEMultipart()
     msg['From'] = email_user
     msg['To'] = email_addr
-    msg['Subject'] = "Attention: The cat hasn't used the toilet for two hours."
+    msg['Subject'] = "Attention: The cat hasn't used the toilet for two hours!"
     body = (
         f"It has been {round(getpasstime()/60,1)} hour(s) since your cat last used the toilet. It's important to monitor your pet's habits to ensure their health and well-being. Please check on your cat to make sure everything is alright."
     )
@@ -400,7 +447,7 @@ def LongNoUseWarning():
         logging.error(f"Failed to send email: {e}")
 
 def checktimepast():
-    if getpasstime() >= 120:
+    if getpasstime() >= 120 and getpasstime() <= 130:
         email_reminder("1")
     
 def read_email(): 
