@@ -76,6 +76,3 @@ This project is a comprehensive sensor data monitoring system using Flask, Nginx
 
 Contributions are welcome! Please open an issue or submit a pull request.
 
-## License
-
-This project is licensed under the Sunny License.
