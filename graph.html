@@ -165,7 +165,7 @@
     <main>
         <section id="graph">
             <h2>Graphs</h2>
-            <h4 id = "lasttimegone">last use is 0 mins before</h4>
+            <h4 id = "lasttimegone">last use is 0 mins before and use 0 times today</h4>
             <button onclick="loadGraph(event, 'duration')">Load Duration Graph</button>
             <button onclick="loadGraph(event, 'moisture')">Load Moisture Graph</button>
             <button onclick="loadGraph(event, 'present')">Load Present Graph</button>
@@ -258,7 +258,7 @@
                     return response.json();
                 })
                 .then(data => {
-                    lasttimegonetext.textContent = `Last use was ${Math.round(data["last record time duration"])} mins ago`;
+                    lasttimegonetext.textContent = `Last use was ${Math.round(data["last record time duration"])} mins ago and use ${Math.round(data["frequency"])} times today`;
                 })
                 .catch(error => {
                     lasttimegonetext.textContent = `Error fetching data: ${error.message}`;
