@@ -255,7 +255,7 @@ def load_content_from_file(filepath: str) -> str:
     """Load content from a text file."""
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"File '{filepath}' not found.")
-    with open(filepath, 'r') as file:
+    with open(filepath, 'r',encoding="utf-8") as file:
         return file.read()
 
 def generate_graph(sensor_data, graph_type, date_label):
@@ -307,8 +307,15 @@ def get_graph(graph_type):
 @app.route('/get-lastgone', methods=['GET'])
 def sendpasstime():
     time = getpasstime()
-    return jsonify({"last record time duration":time})
+    frequency =  getfequency()
+    return jsonify({"last record time duration":time,"frequency":frequency})
 
+
+def getfequency():
+    data_file = get_data_file()
+    with open(data_file, 'r+') as f:
+            return json.load(f)[-1]["frequency"]
+            
 
 def getpasstime():
     now = datetime.now()
