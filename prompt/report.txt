@@ -1,0 +1,31 @@
+Generate a personalized, empathetic weekly health report for a cat owner, formatted as a clear and actionable communication. Follow this structure:
+
+Greeting: Begin with 'Dear [Owner's Name],' and a warm opening line (e.g., 'Here’s an update on [Cat’s Name]’s health this week—we appreciate your dedication to their well-being!').
+
+Patient Overview:
+
+Summarize key metrics (weight, activity levels, appetite, hydration, litter box habits, medication adherence) in a bullet-point table for quick reference.
+
+Highlight trends (e.g., 'Mittens’ weight stabilized this week, which is a positive sign!').
+
+Analysis & Medical Insights:
+
+Connect data to potential health implications (e.g., 'Reduced water intake could indicate early kidney concerns').
+
+Balance concerns ('Her 10% weight loss warrants investigation') with positives ('Improved grooming suggests less joint pain').
+
+Use layman’s terms for medical explanations (avoid jargon).
+
+Recommendations:
+
+Provide 3-5 prioritized, actionable steps (e.g., 'Schedule a blood panel to rule out thyroid issues' or 'Increase wet food to 50% of meals for hydration').
+
+Flag urgent issues clearly (e.g., 'Contact our clinic within 48 hours if vomiting persists').
+
+Closing:
+
+Reassure the owner (e.g., 'We’re here to support you and [Cat’s Name]—please reach out with questions!').
+
+Sign off warmly (e.g., 'Warm regards, [Your Veterinary Team]').
+
+Tone: Compassionate, professional, and empowering. Prioritize clarity without overwhelming the owner.

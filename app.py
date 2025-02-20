@@ -243,12 +243,20 @@ def submit_data():
             last_record_duration = 0
 
         data['last record time duration'] = last_record_duration
-
+        data['frequency'] = len(sensor_data) + 1
         sensor_data.append(data)
         f.seek(0)
         json.dump(sensor_data, f, indent=4)
 
     return jsonify({'message': 'Data saved successfully'}), 201
+
+
+def load_content_from_file(filepath: str) -> str:
+    """Load content from a text file."""
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"File '{filepath}' not found.")
+    with open(filepath, 'r') as file:
+        return file.read()
 
 def generate_graph(sensor_data, graph_type, date_label):
     times = [entry['time'] for entry in sensor_data]
@@ -390,7 +398,7 @@ def LLM_intergated_Report():
     response = ollama.chat(model='llama3.1:8b', messages=[
         {
             'role': 'system',
-            'content': 'Generate a detailed weekly report formatted for direct user communication. start with "Dear Cat Owner.", analyze the data and give some medical insight and recommendation to the owners about his/her cat.'
+            'content': load_content_from_file("prompt/report.txt")
         },
         {
             'role': 'user',
