@@ -1,0 +1,102 @@
+[
+    {
+        "Present": true,
+        "duration": 4,
+        "wet area": false,
+        "moisture": 0.31,
+        "temperature": 25,
+        "time": "04:45:56",
+        "last record time duration": 0,
+        "frequency": 1
+    },
+    {
+        "Present": true,
+        "duration": 5,
+        "wet area": false,
+        "moisture": 0.42,
+        "temperature": 25,
+        "time": "06:02:42",
+        "last record time duration": 0,
+        "frequency": 2
+    },
+    {
+        "Present": true,
+        "duration": 6,
+        "wet area": false,
+        "moisture": 0.57,
+        "temperature": 24,
+        "time": "07:22:50",
+        "last record time duration": 0,
+        "frequency": 3
+    },
+    {
+        "Present": true,
+        "duration": 3,
+        "wet area": false,
+        "moisture": 0.53,
+        "temperature": 28,
+        "time": "09:14:38",
+        "last record time duration": 0,
+        "frequency": 4
+    },
+    {
+        "Present": true,
+        "duration": 3,
+        "wet area": true,
+        "moisture": 0.49,
+        "temperature": 27,
+        "time": "10:57:24",
+        "last record time duration": 0,
+        "frequency": 5
+    },
+    {
+        "Present": true,
+        "duration": 4,
+        "wet area": true,
+        "moisture": 0.62,
+        "temperature": 26,
+        "time": "12:30:15",
+        "last record time duration": 0,
+        "frequency": 6
+    },
+    {
+        "Present": true,
+        "duration": 5,
+        "wet area": false,
+        "moisture": 0.38,
+        "temperature": 24,
+        "time": "14:05:33",
+        "last record time duration": 0,
+        "frequency": 7
+    },
+    {
+        "Present": true,
+        "duration": 3,
+        "wet area": true,
+        "moisture": 0.67,
+        "temperature": 28,
+        "time": "15:48:11",
+        "last record time duration": 0,
+        "frequency": 8
+    },
+    {
+        "Present": true,
+        "duration": 6,
+        "wet area": false,
+        "moisture": 0.44,
+        "temperature": 25,
+        "time": "17:15:09",
+        "last record time duration": 0,
+        "frequency": 9
+    },
+    {
+        "Present": true,
+        "duration": 4,
+        "wet area": true,
+        "moisture": 0.58,
+        "temperature": 27,
+        "time": "19:03:57",
+        "last record time duration": 0,
+        "frequency": 10
+    }
+]

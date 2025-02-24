@@ -207,7 +207,7 @@ def serve_html():
         abort(500, "Internal server error")
 
 @app.route('/phone', methods=['GET'])
-def serve_html():
+def serve_html_phone():
     try:
         url = "https://raw.githubusercontent.com/ARRRsunny/IoTserver/refs/heads/main/graphphone.html"
         with ul.urlopen(url) as client:
@@ -351,7 +351,6 @@ def get_data():
     data_file = get_data_file()
     with open(data_file, 'r') as f:
         sensor_data = json.load(f)
-        print(sensor_data)
     if len(sensor_data)>1:
         return jsonify(sensor_data[-1]), 200
     else:

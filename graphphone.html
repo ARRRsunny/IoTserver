@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sensor Graphs</title>
+    <title>MeowAi</title>
     <style>
 
         body {
@@ -270,7 +270,7 @@
 
 
     <script>
-        const BASE_URL = `http://42.2.114.225:8080`;
+        const BASE_URL = `http://${window.location.hostname}:8080`;
 
         const DebugSwitch = document.getElementById('debugswitch');
         DebugSwitch.addEventListener('change', debugswitching);
