@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Graphs</title>
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            align-items: center;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        header h1 {
+            margin: 0;
+        }
+        nav {
+            background-color: #333;
+            color: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 14px 20px;
+        }
+        nav a:hover {
+            background-color: #575757;
+        }
+        main {
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #jsoninput {
+            margin-top: 20px;
+        }
+        #jsoninput input {
+            margin-bottom: 10px;
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #graph-container, #datadis {
+            margin-top: 20px;
+        }
+        #graph-container img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+            box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+        }
+        img {
+            width: 95%; 
+            height: auto; 
+            border: 2px solid #ddd; 
+            border-radius: 5px;  
+            padding: 5px; 
+            }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            border-radius: 4px;
+        }
+        /* Hide default HTML checkbox */
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 4px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+        .myBox {
+            border: none;
+            padding: 5px;
+            font: 24px/36px sans-serif;
+            width: 100% ;
+            max-height: 50px;
+            overflow-y: hidden;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+        input:focus + .slider {
+            box-shadow: 0 0 1px #45a049;
+        }
+        input:checked + .slider:before {
+            -webkit-transform: translateX(26px);
+            -ms-transform: translateX(26px);
+            transform: translateX(26px);
+        }
+        .debug{
+            display: none;
+        }
+        #SensorValueDisplay {
+            display: flex;
+            justify-content: space-between; /* Distributes space between items */
+            gap: 10px; /* Adds spacing between elements */
+            padding: 10px;
+            width: 85%;
+            white-space: nowrap;
+            height: auto;
+ 
+
+        }
+        #SensorValueDisplaybox {
+            width: 100%;
+            background-color: #ffffff;
+            border-radius: 15px ;
+
+            
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Sensor Graphs</h1>
+    </header>
+
+    <nav>
+        <a href="#graph">Graphs</a>
+        <a href="#input">Input</a>
+        <a href="#email">Email</a>
+        <a href="#data">Data</a>
+        <a href="#Photo">Photo</a>
+    </nav>
+
+    <main>
+        <section id="Photo">
+            <h2>Recent Photo</h2>
+            <img id="recent-photo" alt="No photo available">
+            <div>
+                <input class='debug' type="file" id="photofile" name="file">
+                <button class='debug' onclick="uploadpho(event)">Click to upload Photo</button>
+                <button onclick="getphoto(event)">Click to get photo</button>
+            </div>
+        </section>
+        <section id="Sensorvalue">
+            <h2>Sensor</h2>
+            <div id="SensorValueDisplaybox">
+                <div id="SensorValueDisplay">             
+                    <h4 class = "sensor" id = "temperature">temp: 0°C</h4>
+                    <h4 class = "sensor" id = "moisture">moisture: 0</h4>   
+                </div>
+                <div id="SensorValueDisplay">
+                    <h4 class = "sensor" id = "time">time: 00:00:00</h4>
+                    <h4 class = "sensor" id = "last record time duration">last record: 0 mins</h4>
+                </div>
+            </div>
+
+        </section>
+        <section id="graph">
+            <h2>Graphs</h2>
+            <h4 id = "lasttimegone">last use is 0 mins before and use 0 times today</h4>
+            <div class="myBox">
+                <button onclick="loadGraph(event, 'duration')">Duration Graph</button>
+                <button onclick="loadGraph(event, 'moisture')">Moisture Graph</button>
+                <button onclick="loadGraph(event, 'present')">Present Graph</button>
+                <button onclick="loadGraph(event, 'wet_area')">Wet Area Graph</button>
+                <button onclick="loadGraph(event, 'temperature')">Temperature Graph</button>
+            </div>
+            
+            <div id="graph-container">
+                <p>Select a graph to display.</p>
+            </div>
+        </section>
+
+        <section class='debug' id="input">
+            <h2>Input</h2>
+            <div id="jsoninput">
+                <input type="text" id="present" placeholder='Present (true/false)' />
+                <input type="text" id="duration" placeholder='Duration (int)' />
+                <input type="text" id="wetArea" placeholder='Wet Area (true/false)' />
+                <input type="text" id="moisture" placeholder='Moisture (float)' />
+                <input type="text" id="temperature" placeholder='Temperature (int)' />
+                <input type="text" id="no. of faeces" placeholder='no. of faeces (int)' />
+                <button onclick="sendJson(event)">Click to send</button>
+                <button onclick="clearInput(event)">Clear Inputs</button>
+            </div>
+        </section>
+        <section id="email">
+            <h2>Email</h2>
+            <div id="emailbut">
+                <input type="text" id="emailaddr" placeholder='enter email address' />
+                <button onclick="sendReportToEmail(event)">report</button>
+                <button onclick="sendEmailaddr(event)">address</button>
+            </div>
+            <section class='debug' id="email_reminder">
+                <button onclick="sendReminderToEmail(event,1)">Click to LongNoUse email reminder</button>
+                <button onclick="sendReminderToEmail(event,2)">Click to TooDirty email reminder</button>
+            </section>
+        </section>
+        <section class='debug' id="data">
+            <h2>Sensor Data</h2>
+            <div>
+                <button onclick="getData(event)">Click to fetch</button>
+                <p id="datadis">Data will appear here</p>
+            </div>
+        </section>
+        
+        <section id="debug">
+            <h2>Debug Mode</h2>
+            <label class="switch">
+                <input id = 'debugswitch' type="checkbox">
+                <span class="slider"></span>
+            </label>
+        </section>
+    </main>
+
+
+    <script>
+        const BASE_URL = `http://42.2.114.225:8080`;
+
+        const DebugSwitch = document.getElementById('debugswitch');
+        DebugSwitch.addEventListener('change', debugswitching);
+
+        function sendReminderToEmail(event,ID){
+            const request = new XMLHttpRequest();
+            request.open('GET', `${BASE_URL}/email_reminder/${ID}`, true);
+            request.onload = function() {
+                if (request.status >= 200 && request.status < 400) {
+                    console.log('Report sent successfully');
+                } else {
+                    console.error('Error sending Reminder:', request.statusText);
+                }
+            };
+            request.onerror = function() {
+                console.error('Request failed');
+            };
+            request.send();
+        }
+        function updatalasttimegoneandsen() {
+            const lasttimegonetext = document.getElementById('lasttimegone');
+            console.log(1)
+            fetch(`${BASE_URL}/get-lastgone`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    lasttimegonetext.textContent = `Last use was ${Math.round(data["last record time duration"])} mins ago and use ${Math.round(data["frequency"])} times today`;
+                })
+                .catch(error => {
+                    lasttimegonetext.textContent = `Error fetching data: ${error.message}`;
+                });
+            
+            const temperature = document.getElementById('temperature');
+            const moisture = document.getElementById('moisture');
+            const time = document.getElementById('time');
+            const lastrecordtimeduration = document.getElementById('last record time duration');
+            fetch(`${BASE_URL}/get-data`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    temperature.textContent = `temp: ${data["temperature"]}°C`;
+                    moisture.textContent = `moisture: ${data["moisture"]}`;
+                    time.textContent = `time: ${data["time"]}`;
+                    lastrecordtimeduration.textContent = `last record: ${data["last record time duration"]} mins`;
+                })
+                .catch(error => {
+                    temperature.textContent = `Error`;
+                    moisture.textContent = `Error`;
+                    time.textContent = `Error`;
+                    lastrecordtimeduration.textContent = `Error`;
+                });    
+        }
+        updatalasttimegoneandsen();
+        setInterval(updatalasttimegoneandsen, 60000);
+
+        function debugswitching(event) {
+            const debugEle = document.getElementsByClassName('debug');
+            for (let i = 0; i < debugEle.length; i++) {
+                if (event.target.checked) {
+                    debugEle[i].style.display = 'inline';
+                } else {
+                    debugEle[i].style.display = 'none';
+                }
+            }
+        }
+
+
+        function uploadpho() {
+            const photoFile = document.getElementById('photofile');
+            
+            if (photoFile) {
+                const fileList = photoFile.files;
+                console.log(fileList);
+            
+                const formData = new FormData();
+                formData.append('file', fileList[0]);
+                
+                fetch(`${BASE_URL}/upload-photo`, {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+                
+                // Make sure `getphoto` is defined
+                if (typeof getphoto === 'function') {
+                    getphoto();
+                } else {
+                    console.error('getphoto function is not defined');
+                }
+            } else {
+                console.error('photofile element not found');
+            }
+        }
+
+
+
+
+        function getphoto(){
+            fetch(`${BASE_URL}/get_recphoto`).then(response => {
+                if(response.ok) {
+                    document.getElementById('recent-photo').src = response.url;
+                } else {
+                    document.getElementById('recent-photo').alt = 'No photo available';
+                }
+            });
+        }
+        function loadGraph(event, graphType) {
+            event.preventDefault();
+            const container = document.getElementById('graph-container');
+            container.innerHTML = `<p>Loading ${graphType} graph...</p>`;
+
+            fetch(`${BASE_URL}/get-graph/${graphType}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    container.innerHTML = `<img src="${url}" alt="${graphType} graph">`;
+                })
+                .catch(error => {
+                    container.innerHTML = `<p>Error loading graph: ${error.message}</p>`;
+                });
+        }
+        function sendReportToEmail() {
+            const request = new XMLHttpRequest();
+            request.open('GET', `${BASE_URL}/get-emailrepo`, true);
+            request.onload = function() {
+                if (request.status >= 200 && request.status < 400) {
+                    console.log('Report sent successfully');
+                } else {
+                    console.error('Error sending report:', request.statusText);
+                }
+            };
+            request.onerror = function() {
+                console.error('Request failed');
+            };
+            request.send();
+        }
+
+        function updateEmailDisplay() {
+            fetch(`${BASE_URL}/getemail`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+                const emailInput = document.getElementById('emailaddr');
+                emailInput.value = data.email || '';
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+
+        function sendEmailaddr() {
+            const emailInput = document.getElementById('emailaddr');
+            var emailData = { "email": `${emailInput.value}` };
+            console.log(emailData)
+            fetch(`${BASE_URL}/getemail`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(emailData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+
+        function getData(event) {
+            event.preventDefault();
+            const datadis = document.getElementById('datadis');
+            datadis.innerHTML = `<p>Loading data...</p>`;
+            fetch(`${BASE_URL}/get-data`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    datadis.innerHTML = `<p>${JSON.stringify(data)}</p>`;
+                })
+                .catch(error => {
+                    datadis.innerHTML = `<p>Error fetching data: ${error.message}</p>`;
+                });
+        }
+
+        function sendJson(event) {
+            event.preventDefault();
+            const present = document.getElementById('present').value.toLowerCase() === 'true';
+            const duration = parseInt(document.getElementById('duration').value, 10);
+            const wetArea = document.getElementById('wetArea').value.toLowerCase() === 'true';
+            const moisture = parseInt(document.getElementById('moisture').value, 10);
+            const temperature = parseInt(document.getElementById('temperature').value, 10);
+            const Nooffaeces = parseInt(document.getElementById('no. of faeces').value, 10);
+            const jsonData = {
+                "Present": present,
+                "duration": duration,
+                "wet area": wetArea,
+                "moisture": moisture,
+                "temperature": temperature,
+                "no. of poop":Nooffaeces
+            };
+
+            fetch(`${BASE_URL}/submit-data`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(jsonData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+                clearInput();
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+
+        function clearInput() {
+            document.getElementById('present').value = '';
+            document.getElementById('duration').value = '';
+            document.getElementById('wetArea').value = '';
+            document.getElementById('moisture').value = '';
+            document.getElementById('temperature').value = '';
+            document.getElementById('no. of faeces').value = '';
+        }
+        updateEmailDisplay()
+        getphoto()
+    </script>
+</body>
+</html>

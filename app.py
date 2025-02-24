@@ -206,6 +206,17 @@ def serve_html():
         logging.error("Error serving HTML: %s", e)
         abort(500, "Internal server error")
 
+@app.route('/phone', methods=['GET'])
+def serve_html():
+    try:
+        url = "https://raw.githubusercontent.com/ARRRsunny/IoTserver/refs/heads/main/graphphone.html"
+        with ul.urlopen(url) as client:
+            htmldata = client.read().decode('utf-8')
+        return htmldata
+    except Exception as e:
+        logging.error("Error serving HTML: %s", e)
+        abort(500, "Internal server error")
+
 
 @app.route('/submit-data', methods=['POST'])
 def submit_data():
@@ -213,7 +224,7 @@ def submit_data():
     if not data:
         return jsonify({'error': 'No data provided'}), 400
 
-    expected_keys = {"Present", "duration", "wet area", "moisture","temperature"}
+    expected_keys = {"Present", "duration", "wet area", "moisture","temperature","no. of poop"}
     if not expected_keys.issubset(data.keys()):
         return jsonify({'error': 'Invalid data format'}), 400
 
@@ -340,8 +351,11 @@ def get_data():
     data_file = get_data_file()
     with open(data_file, 'r') as f:
         sensor_data = json.load(f)
-
-    return jsonify(sensor_data), 200
+        print(sensor_data)
+    if len(sensor_data)>1:
+        return jsonify(sensor_data[-1]), 200
+    else:
+        return jsonify({'message': 'no data here'}), 200
 
 @app.route('/get-emailrepo',methods=['GET'])
 def send_email():
