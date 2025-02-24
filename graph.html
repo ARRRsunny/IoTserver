@@ -182,8 +182,9 @@
                 <input type="text" id="present" placeholder='Present (true/false)' />
                 <input type="text" id="duration" placeholder='Duration (int)' />
                 <input type="text" id="wetArea" placeholder='Wet Area (true/false)' />
-                <input type="text" id="moisture" placeholder='Moisture (int)' />
-                <input type="text" id="temperature" placeholder='temperature (int)' />
+                <input type="text" id="moisture" placeholder='Moisture (float)' />
+                <input type="text" id="temperature" placeholder='Temperature (int)' />
+                <input type="text" id="no. of faeces" placeholder='no. of faeces (int)' />
                 <button onclick="sendJson(event)">Click to send</button>
                 <button onclick="clearInput(event)">Clear Inputs</button>
             </div>
@@ -434,13 +435,14 @@
             const wetArea = document.getElementById('wetArea').value.toLowerCase() === 'true';
             const moisture = parseInt(document.getElementById('moisture').value, 10);
             const temperature = parseInt(document.getElementById('temperature').value, 10);
-
+            const Nooffaeces = parseInt(document.getElementById('no. of faeces').value, 10);
             const jsonData = {
                 "Present": present,
                 "duration": duration,
                 "wet area": wetArea,
                 "moisture": moisture,
-                "temperature": temperature
+                "temperature": temperature,
+                "no. of poop":Nooffaeces
             };
 
             fetch(`${BASE_URL}/submit-data`, {
@@ -471,6 +473,7 @@
             document.getElementById('wetArea').value = '';
             document.getElementById('moisture').value = '';
             document.getElementById('temperature').value = '';
+            document.getElementById('no. of faeces').value = '';
         }
         updateEmailDisplay()
         getphoto()
