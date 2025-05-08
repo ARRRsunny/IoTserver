@@ -18,11 +18,11 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import urllib.request as ul
 
+email_user = "example@gmail.com"  #the agent robot's account to send email to user, use App passkey provided by Google to login
+email_pass = "password"   #App passkey
+email_receiver = "example2@gmail.com"  #the user's email
 
-email_user = "example@gmail.com"
-email_pass = "password"
-email_receiver = "example2@gmail.com"
-
+#file store path
 DATA_DIR = 'data'
 GRAPH_DIR = 'graphs'
 EMAIL_DIR = 'email_data'
@@ -39,19 +39,23 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 scheduler = BackgroundScheduler()
 
+#get the current day to find the file 
 def get_data_file():
     today = datetime.now().strftime('%d%m%Y')
     return os.path.join(DATA_DIR, f'sensor_data_{today}.json')
 
+#init new file
 def initialize_data_storage():
     data_file = get_data_file()
     if not os.path.exists(data_file):
         with open(data_file, 'w') as f:
             json.dump([], f)
 
+#auto exe task
 def daily_task():
     initialize_data_storage()
 
+#get and read the whole week's data
 def get_last_week_data():
     last_week_data = []
     today = datetime.now()
@@ -64,6 +68,7 @@ def get_last_week_data():
                 last_week_data.extend(daily_data)
     print(f"Collected data for last week: {len(last_week_data)} entries") 
     return last_week_data
+
 
 def calculate_averages(sensor_data):
     # Filter out None values for each field
@@ -84,6 +89,7 @@ def calculate_averages(sensor_data):
         'average_temperature': average_temperature,
     }
 
+#include sending a weekly report to the user
 def weekly_task():
     logging.debug("prepare weekly report")
     
@@ -105,7 +111,37 @@ def weekly_task():
 
     send_email_with_averages_and_graph(averages, graph_files,email_user,email_pass,email_receiver)
 
+#make graphes by the data collected
+def generate_graph(sensor_data, graph_type, date_label):
+    times = [entry['time'] for entry in sensor_data]
+    data_map = {
+        'duration': [entry['duration'] for entry in sensor_data],
+        'moisture': [entry['moisture'] for entry in sensor_data],
+        'present': [1 if entry['Present'] else 0 for entry in sensor_data],
+        'wet_area': [1 if entry['wet area'] else 0 for entry in sensor_data],
+        'temperature': [entry['temperature'] for entry in sensor_data],
+    }
 
+    y_data = data_map.get(graph_type)
+    if y_data is None:
+        return None
+
+    fig, ax = plt.subplots()
+    
+    if graph_type in ['duration', 'present']:
+        ax.scatter(times, y_data)
+    else:
+        ax.plot(times, y_data, marker='o')
+
+    ax.set_title(f'{graph_type.capitalize()} Over Time - {date_label}')
+    ax.set_xlabel('Time')
+    ax.set_ylabel(graph_type.capitalize())
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    graph_file = save_graph(fig, f'{graph_type}_graph.png')
+    return graph_file
+
+#combine those graph
 def generate_combined_graph(sensor_data, date_label, folder_path='graphs-day'):
     os.makedirs(folder_path, exist_ok=True)
     times = [entry['time'] for entry in sensor_data]
@@ -131,6 +167,7 @@ def generate_combined_graph(sensor_data, date_label, folder_path='graphs-day'):
     plt.close(fig)
     return graph_file
 
+#send email procedure
 def send_email_with_averages_and_graph(averages, graph_files, email_user, email_pass, email_receiver):
     email_addr = read_email() or email_receiver
     logging.debug(email_addr)
@@ -158,10 +195,24 @@ def send_email_with_averages_and_graph(averages, graph_files, email_user, email_
             logging.debug("Report sent")
     except Exception as e:
         logging.error(f"Failed to send email: {e}")
-        
+    
+#check file valid
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+#Load content from a text file.
+def load_content_from_file(filepath: str) -> str:
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"File '{filepath}' not found.")
+    with open(filepath, 'r',encoding="utf-8") as file:
+        return file.read()
+
+
+#the server thread-----------------------------------------
+
+
+
+#for the client uploading new photoes
 @app.route('/upload-photo', methods=['POST'])
 def upload_photo():
     if 'file' not in request.files:
@@ -180,6 +231,7 @@ def upload_photo():
     else:
         return jsonify({'error': 'Invalid file type'}), 400
 
+#for the client getting the latest photoes
 @app.route('/get_recphoto', methods=['GET'])
 def get_recphoto():
     try:
@@ -194,7 +246,7 @@ def get_recphoto():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-    
+#main webpage    
 @app.route('/', methods=['GET'])
 def serve_html():
     try:
@@ -206,6 +258,7 @@ def serve_html():
         logging.error("Error serving HTML: %s", e)
         abort(500, "Internal server error")
 
+#main webpage for mobile devices   
 @app.route('/phone', methods=['GET'])
 def serve_html_phone():
     try:
@@ -217,7 +270,7 @@ def serve_html_phone():
         logging.error("Error serving HTML: %s", e)
         abort(500, "Internal server error")
 
-
+#upload new sensor data
 @app.route('/submit-data', methods=['POST'])
 def submit_data():
     data = request.get_json()
@@ -262,42 +315,8 @@ def submit_data():
     return jsonify({'message': 'Data saved successfully'}), 201
 
 
-def load_content_from_file(filepath: str) -> str:
-    """Load content from a text file."""
-    if not os.path.exists(filepath):
-        raise FileNotFoundError(f"File '{filepath}' not found.")
-    with open(filepath, 'r',encoding="utf-8") as file:
-        return file.read()
 
-def generate_graph(sensor_data, graph_type, date_label):
-    times = [entry['time'] for entry in sensor_data]
-    data_map = {
-        'duration': [entry['duration'] for entry in sensor_data],
-        'moisture': [entry['moisture'] for entry in sensor_data],
-        'present': [1 if entry['Present'] else 0 for entry in sensor_data],
-        'wet_area': [1 if entry['wet area'] else 0 for entry in sensor_data],
-        'temperature': [entry['temperature'] for entry in sensor_data],
-    }
-
-    y_data = data_map.get(graph_type)
-    if y_data is None:
-        return None
-
-    fig, ax = plt.subplots()
-    
-    if graph_type in ['duration', 'present']:
-        ax.scatter(times, y_data)
-    else:
-        ax.plot(times, y_data, marker='o')
-
-    ax.set_title(f'{graph_type.capitalize()} Over Time - {date_label}')
-    ax.set_xlabel('Time')
-    ax.set_ylabel(graph_type.capitalize())
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    graph_file = save_graph(fig, f'{graph_type}_graph.png')
-    return graph_file
-
+#get a specific graph
 @app.route('/get-graph/<graph_type>', methods=['GET'])
 def get_graph(graph_type):
     data_file = get_data_file()
@@ -315,19 +334,20 @@ def get_graph(graph_type):
     
     return send_file(graph_file, mimetype='image/png')
 
+#check the usage of the cat toilet
 @app.route('/get-lastgone', methods=['GET'])
 def sendpasstime():
     time = getpasstime()
     frequency =  getfequency()
     return jsonify({"last record time duration":time,"frequency":frequency})
 
-
+#count the number of use of the toilet
 def getfequency():
     data_file = get_data_file()
     with open(data_file, 'r+') as f:
             return json.load(f)[-1]["frequency"]
             
-
+#cal the time separation
 def getpasstime():
     now = datetime.now()
     data_file = get_data_file()
@@ -345,7 +365,7 @@ def getpasstime():
                 last_record_duration = time_diff.total_seconds() / 60   
             return last_record_duration
             
-     
+#get the history data
 @app.route('/get-data', methods=['GET'])
 def get_data():
     data_file = get_data_file()
@@ -356,11 +376,9 @@ def get_data():
     else:
         return jsonify({'message': 'no data here'}), 200
 
-@app.route('/get-emailrepo',methods=['GET'])
-def send_email():
-    weekly_task()
-    return jsonify({'message': 'Email sent successfully'})
 
+
+#get and upload the user's email address
 @app.route('/getemail', methods=['POST', 'GET'])
 def get_email():
     email_folder = EMAIL_DIR
@@ -388,7 +406,14 @@ def get_email():
             email_data = json.load(f)
 
         return jsonify(email_data), 200
-    
+
+#send email report immediately
+@app.route('/get-emailrepo',methods=['GET'])
+def send_email():
+    weekly_task()
+    return jsonify({'message': 'Email sent successfully'})
+
+#send email reminder immediately
 @app.route('/email_reminder/<default_sin_ID>', methods=['GET'])
 def email_reminder(default_sin_ID):
     if default_sin_ID == "1":
@@ -400,6 +425,7 @@ def email_reminder(default_sin_ID):
 
     return jsonify({'error': 'no corresponding ID'})
 
+#generate a report by LLM model
 def LLM_intergated_Report():
     # Collect the last week's sensor data
     last_week_data = get_last_week_data()
@@ -431,7 +457,7 @@ def LLM_intergated_Report():
 
     return generated_report
 
-
+#emergency
 def TooDirtyWarning():
     # Example function to send the report via email
     email_addr = read_email() or email_receiver
@@ -453,7 +479,7 @@ def TooDirtyWarning():
     except Exception as e:
         logging.error(f"Failed to send email: {e}")
 
-
+#emergency 
 def LongNoUseWarning():
     email_addr = read_email() or email_receiver
     logging.debug(email_addr)
@@ -474,10 +500,12 @@ def LongNoUseWarning():
     except Exception as e:
         logging.error(f"Failed to send email: {e}")
 
+#count the time pass of last toilet time
 def checktimepast():
     if getpasstime() >= 120 and getpasstime() <= 130:
         email_reminder("1")
-    
+
+#get the email address
 def read_email(): 
     email_data_file = os.path.join(EMAIL_DIR,'email_data.json') 
     if os.path.exists(email_data_file): 
@@ -493,10 +521,13 @@ def save_graph(fig, filename):
     plt.close(fig)
     return path
 
+
+
+#init everything
 if __name__ == '__main__':
     initialize_data_storage()
     scheduler.add_job(daily_task, 'cron', hour=0, minute=0)            #updata data 
-    scheduler.add_job(weekly_task, 'cron', day_of_week='sun', hour=20, minute=0)    #Sunday 8.00pm sent report
+    scheduler.add_job(weekly_task, 'cron', day_of_week='sun', hour=20, minute=0)    #every Sunday 8.00pm sent report
     scheduler.add_job(checktimepast, 'interval', minutes=10)
     scheduler.start()
     app.run(host='0.0.0.0', port=8080,debug=True)
