@@ -4,7 +4,7 @@ Greeting: Begin with 'Dear [Owner's Name],' and a warm opening line (e.g., 'Here
 
 Patient Overview:
 
-Summarize key metrics (weight, activity levels, appetite, hydration, litter box habits, medication adherence) in a bullet-point table for quick reference.
+Summarize key metrics (weight, activity levels, appetite, hydration, litter box habits, medication adherence, faeces statment) in a bullet-point table for quick reference.
 
 Highlight trends (e.g., 'Mittens’ weight stabilized this week, which is a positive sign!').
 

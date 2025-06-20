@@ -356,7 +356,7 @@
                 const formData = new FormData();
                 formData.append('file', fileList[0]);
                 
-                fetch(`${BASE_URL}/upload-photo`, {
+                fetch(`${BASE_URL}/upload-photo/0`, {
                     method: 'POST',
                     body: formData,
                 })
@@ -383,7 +383,7 @@
 
 
         function getphoto(){
-            fetch(`${BASE_URL}/get_recphoto`).then(response => {
+            fetch(`${BASE_URL}/get_recphoto/0`).then(response => {
                 if(response.ok) {
                     document.getElementById('recent-photo').src = response.url;
                 } else {
@@ -508,7 +508,7 @@
                 "wet area": wetArea,
                 "moisture": moisture,
                 "temperature": temperature,
-                "no. of poop":Nooffaeces
+                "no. of faeces":Nooffaeces
             };
 
             fetch(`${BASE_URL}/submit-data`, {

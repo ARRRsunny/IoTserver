@@ -12,7 +12,7 @@ from flask_cors import CORS
 from apscheduler.schedulers.background import BackgroundScheduler
 import logging
 import matplotlib
-import ollama
+from openai import OpenAI
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
@@ -21,24 +21,36 @@ import urllib.request as ul
 email_user = "example@gmail.com"  #the agent robot's account to send email to user, use App passkey provided by Google to login
 email_pass = "password"   #App passkey
 email_receiver = "example2@gmail.com"  #the user's email
+OpenR_API ='12341234123421342143123412342134232142141234'
 
+client = OpenAI(
+  base_url="https://openrouter.ai/api/v1",
+  api_key=OpenR_API,
+)
 #file store path
 DATA_DIR = 'data'
 GRAPH_DIR = 'graphs'
 EMAIL_DIR = 'email_data'
 UPLOAD_FOLDER = 'uploads'
+UPLOAD_S_FOLDER = 'uploads_s'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
+TEXT_MODEL = "deepseek/deepseek-chat-v3-0324:free"
+IMAGE_MODEL = "google/gemini-2.0-flash-exp:free"
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(UPLOAD_S_FOLDER, exist_ok=True)
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(GRAPH_DIR, exist_ok=True)
 
 app = Flask(__name__)
 CORS(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
+app.config['UPLOAD_S_FOLDER'] = UPLOAD_S_FOLDER
 scheduler = BackgroundScheduler()
 
+HOST = '0.0.0.0'   #public ip for image desc
+PORT = 8080
 #get the current day to find the file 
 def get_data_file():
     today = datetime.now().strftime('%d%m%Y')
@@ -213,34 +225,48 @@ def load_content_from_file(filepath: str) -> str:
 
 
 #for the client uploading new photoes
-@app.route('/upload-photo', methods=['POST'])
-def upload_photo():
+@app.route('/upload-photo/<type>', methods=['POST'])
+def upload_photo(type):
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
 
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
-
+    print(type)
+    if type != '0' and type != '1': 
+        return jsonify({'error': 'wrong type'}), 400
+    
     if file and allowed_file(file.filename):
         now = datetime.now()
         formatted_time = now.strftime("%S%M%H_%d%m%y")
         filename = f"recentcap_{formatted_time}.jpg"
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        return jsonify({'message': 'File uploaded successfully'}), 201
+        if type == '0':
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return jsonify({'message': 'File uploaded successfully'}), 201
+        elif type == '1':
+            file.save(os.path.join(app.config['UPLOAD_S_FOLDER'], filename))
+            return jsonify({'message': 'File uploaded successfully'}), 201
     else:
         return jsonify({'error': 'Invalid file type'}), 400
 
 #for the client getting the latest photoes
-@app.route('/get_recphoto', methods=['GET'])
-def get_recphoto():
+@app.route('/get_recphoto/<type>', methods=['GET'])
+def get_recphoto(type):
+    if type != '0' and type != '1': 
+        return jsonify({'error': 'wrong type'}), 400
+    
     try:
-        files = os.listdir(app.config['UPLOAD_FOLDER'])
-        files = sorted(files, key=lambda x: os.path.getmtime(os.path.join(app.config['UPLOAD_FOLDER'], x)), reverse=True)
+        if type == '0':
+            add = app.config['UPLOAD_FOLDER']
+        elif type == '1':
+            add = app.config['UPLOAD_S_FOLDER']
+        files = os.listdir(add)
+        files = sorted(files, key=lambda x: os.path.getmtime(os.path.join(add, x)), reverse=True)
         most_recent_file = files[0] if files else None
 
         if most_recent_file:
-            return send_file(os.path.join(app.config['UPLOAD_FOLDER'], most_recent_file), download_name=most_recent_file, as_attachment=False)
+            return send_file(os.path.join(add, most_recent_file), download_name=most_recent_file, as_attachment=False)
         else:
             return jsonify({'error': 'No files available'}), 404
     except Exception as e:
@@ -277,7 +303,8 @@ def submit_data():
     if not data:
         return jsonify({'error': 'No data provided'}), 400
 
-    expected_keys = {"Present", "duration", "wet area", "moisture","temperature","no. of poop"}
+    expected_keys = {"Present", "duration", "wet area", "moisture","temperature", "no of faeces"}
+
     if not expected_keys.issubset(data.keys()):
         return jsonify({'error': 'Invalid data format'}), 400
 
@@ -439,24 +466,65 @@ def LLM_intergated_Report():
         f"- Average Duration: {averages['average_duration']:.2f}\n"
         f"- Average Temperature: {averages['average_temperature']:.2f}\n"
     )
-
-    # Send the summary to the LLM model
-    response = ollama.chat(model='llama3.1:8b', messages=[
-        {
-            'role': 'system',
-            'content': load_content_from_file("prompt/report.txt")
+    completion = client.chat.completions.create(
+        extra_headers={
+            "HTTP-Referer": "<YOUR_SITE_URL>", # Optional. Site URL for rankings on openrouter.ai.
+            "X-Title": "<YOUR_SITE_NAME>", # Optional. Site title for rankings on openrouter.ai.
         },
-        {
-            'role': 'user',
-            'content': summary
-        }
-    ])
+        extra_body={},
+        model=TEXT_MODEL,
+        messages=[
+            {
+                'role': 'system',
+                'content': load_content_from_file("prompt/report.txt")
+            },
+            {
+                'role': 'user',
+                'content': get_image_descri()
+            },
+            {
+                'role': 'user',
+                'content': summary
+            }
+            ]
+        )
+    # Send the summary to the LLM model
+
 
     # Extract the generated report
-    generated_report = response['message']['content']
-
+    generated_report = completion.choices[0].message.content
+    print(generated_report)
     return generated_report
 
+
+def get_image_descri():
+    completion = client.chat.completions.create(
+    extra_headers={
+        "HTTP-Referer": "<YOUR_SITE_URL>", # Optional. Site URL for rankings on openrouter.ai.
+        "X-Title": "<YOUR_SITE_NAME>", # Optional. Site title for rankings on openrouter.ai.
+    },
+    extra_body={},
+    model="qwen/qwen2.5-vl-72b-instruct:free",
+    messages=[
+        {
+        "role": "user",
+        "content": [
+            {
+            "type": "text",
+            "text": "this is the image of cat's faeces. you should try to describe the shape, appearence and color for medical use. you response should only contain the answer"
+            },
+            {
+            "type": "image_url",
+            "image_url": {
+                "url": f"http://{HOST}:{PORT}/get_recphoto/1"
+            }
+            }
+        ]
+        }
+    ]
+    )
+    return completion.choices[0].message.content
+        
 #emergency
 def TooDirtyWarning():
     # Example function to send the report via email
@@ -530,4 +598,4 @@ if __name__ == '__main__':
     scheduler.add_job(weekly_task, 'cron', day_of_week='sun', hour=20, minute=0)    #every Sunday 8.00pm sent report
     scheduler.add_job(checktimepast, 'interval', minutes=10)
     scheduler.start()
-    app.run(host='0.0.0.0', port=8080,debug=True)
+    app.run(host=HOST, port=PORT,debug=True)
