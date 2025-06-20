@@ -1,3 +1,6 @@
-static/
-saved_models/
-bin/
+email_data/
+data/
+graphs/
+graphs-day/
+uploads/
+uploads_s/
