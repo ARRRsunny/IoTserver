@@ -12,7 +12,7 @@ from flask_cors import CORS
 from apscheduler.schedulers.background import BackgroundScheduler
 import logging
 import matplotlib
-from openai import OpenAI
+
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
@@ -21,12 +21,8 @@ import urllib.request as ul
 email_user = "example@gmail.com"  #the agent robot's account to send email to user, use App passkey provided by Google to login
 email_pass = "password"   #App passkey
 email_receiver = "example2@gmail.com"  #the user's email
-OpenR_API ='12341234123421342143123412342134232142141234'
+OpenR_API ='1252523523525252525252'
 
-client = OpenAI(
-  base_url="https://openrouter.ai/api/v1",
-  api_key=OpenR_API,
-)
 #file store path
 DATA_DIR = 'data'
 GRAPH_DIR = 'graphs'
@@ -35,8 +31,23 @@ UPLOAD_FOLDER = 'uploads'
 UPLOAD_S_FOLDER = 'uploads_s'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
-TEXT_MODEL = "deepseek/deepseek-chat-v3-0324:free"
-IMAGE_MODEL = "google/gemini-2.0-flash-exp:free"
+REPORT_PRO = "prompt/report.txt"
+CAP_PRO = 'prompt/CapAnalyzePrompt.txt'
+
+
+offline = True
+if offline:
+    import ollama
+    TEXT_MODEL = 'llama3.1:8b'
+    IMAGE_MODEL = 'llama3.2-vision:11b'
+else:
+    from openai import OpenAI
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=OpenR_API,
+    )
+    TEXT_MODEL = "deepseek/deepseek-chat-v3-0324:free"
+    IMAGE_MODEL = "qwen/qwen2.5-vl-72b-instruct:free"
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(UPLOAD_S_FOLDER, exist_ok=True)
@@ -261,16 +272,20 @@ def get_recphoto(type):
             add = app.config['UPLOAD_FOLDER']
         elif type == '1':
             add = app.config['UPLOAD_S_FOLDER']
-        files = os.listdir(add)
-        files = sorted(files, key=lambda x: os.path.getmtime(os.path.join(add, x)), reverse=True)
-        most_recent_file = files[0] if files else None
-
-        if most_recent_file:
-            return send_file(os.path.join(add, most_recent_file), download_name=most_recent_file, as_attachment=False)
+        i,j = findNearestPho(add)
+        if i:
+            return send_file(i, download_name=j, as_attachment=False)
         else:
             return jsonify({'error': 'No files available'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+def findNearestPho(Path):
+    files = os.listdir(Path)
+    files = sorted(files, key=lambda x: os.path.getmtime(os.path.join(Path, x)), reverse=True)
+    most_recent_file = files[0] if files else None
+    return os.path.join(Path, most_recent_file),most_recent_file
 
 #main webpage    
 @app.route('/', methods=['GET'])
@@ -466,17 +481,10 @@ def LLM_intergated_Report():
         f"- Average Duration: {averages['average_duration']:.2f}\n"
         f"- Average Temperature: {averages['average_temperature']:.2f}\n"
     )
-    completion = client.chat.completions.create(
-        extra_headers={
-            "HTTP-Referer": "<YOUR_SITE_URL>", # Optional. Site URL for rankings on openrouter.ai.
-            "X-Title": "<YOUR_SITE_NAME>", # Optional. Site title for rankings on openrouter.ai.
-        },
-        extra_body={},
-        model=TEXT_MODEL,
-        messages=[
+    messages=[
             {
                 'role': 'system',
-                'content': load_content_from_file("prompt/report.txt")
+                'content': load_content_from_file(REPORT_PRO)
             },
             {
                 'role': 'user',
@@ -487,42 +495,74 @@ def LLM_intergated_Report():
                 'content': summary
             }
             ]
-        )
-    # Send the summary to the LLM model
-
-
-    # Extract the generated report
-    generated_report = completion.choices[0].message.content
+    print(messages)
+    if offline:
+        response = ollama.chat(model=TEXT_MODEL, messages=messages)
+        generated_report = response['message']['content']
+    else:
+        completion = client.chat.completions.create(
+            extra_headers={
+                "HTTP-Referer": "<YOUR_SITE_URL>", # Optional. Site URL for rankings on openrouter.ai.
+                "X-Title": "<YOUR_SITE_NAME>", # Optional. Site title for rankings on openrouter.ai.
+            },
+            extra_body={},
+            model=TEXT_MODEL,
+            messages=messages
+            )
+        generated_report = completion.choices[0].message.content
     print(generated_report)
     return generated_report
 
 
 def get_image_descri():
-    completion = client.chat.completions.create(
-    extra_headers={
-        "HTTP-Referer": "<YOUR_SITE_URL>", # Optional. Site URL for rankings on openrouter.ai.
-        "X-Title": "<YOUR_SITE_NAME>", # Optional. Site title for rankings on openrouter.ai.
-    },
-    extra_body={},
-    model="qwen/qwen2.5-vl-72b-instruct:free",
-    messages=[
-        {
-        "role": "user",
-        "content": [
+    if offline:
+        try:
+            cap_path,i = findNearestPho(app.config['UPLOAD_S_FOLDER'])
+            print(cap_path)
+            content = load_content_from_file(CAP_PRO)
+            print(content)
+            response = ollama.chat(
+                model= IMAGE_MODEL,
+                messages=[{
+                    'role': 'user',
+                    'content': content,
+                    'images': [cap_path]
+                }]
+            )
+            print(response['message']['content'])
+            return response['message']['content']
+        except FileNotFoundError:
+            logging.error(f"Cap analysis prompt file or image '{cap_path}' not found.")
+            return "No image description available."
+        except Exception as e:
+            logging.error(f"Error during cap analysis: {e}")
+            return "Error analyzing image."
+    else:
+        completion = client.chat.completions.create(
+        extra_headers={
+            "HTTP-Referer": "<YOUR_SITE_URL>", # Optional. Site URL for rankings on openrouter.ai.
+            "X-Title": "<YOUR_SITE_NAME>", # Optional. Site title for rankings on openrouter.ai.
+        },
+        extra_body={},
+        model=IMAGE_MODEL,
+        messages=[
             {
-            "type": "text",
-            "text": "this is the image of cat's faeces. you should try to describe the shape, appearence and color for medical use. you response should only contain the answer"
-            },
-            {
-            "type": "image_url",
-            "image_url": {
-                "url": f"http://{HOST}:{PORT}/get_recphoto/1"
-            }
+            "role": "user",
+            "content": [
+                {
+                "type": "text",
+                "text": "this is the image of cat's faeces. you should try to describe the shape, appearence and color for medical use. you response should only contain the answer"
+                },
+                {
+                "type": "image_url",
+                "image_url": {
+                    "url": f"http://{HOST}:{PORT}/get_recphoto/1"
+                }
+                }
+            ]
             }
         ]
-        }
-    ]
-    )
+        )
     return completion.choices[0].message.content
         
 #emergency
