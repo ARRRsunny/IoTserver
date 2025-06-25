@@ -244,7 +244,7 @@ def upload_photo(type):
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
-    print(type)
+
     if type != '0' and type != '1': 
         return jsonify({'error': 'wrong type'}), 400
     
@@ -291,10 +291,7 @@ def findNearestPho(Path):
 @app.route('/', methods=['GET'])
 def serve_html():
     try:
-        url = "https://raw.githubusercontent.com/ARRRsunny/IoTserver/refs/heads/main/graph.html"
-        with ul.urlopen(url) as client:
-            htmldata = client.read().decode('utf-8')
-        return htmldata
+        return send_file("graph.html")
     except Exception as e:
         logging.error("Error serving HTML: %s", e)
         abort(500, "Internal server error")
@@ -303,10 +300,7 @@ def serve_html():
 @app.route('/phone', methods=['GET'])
 def serve_html_phone():
     try:
-        url = "https://raw.githubusercontent.com/ARRRsunny/IoTserver/refs/heads/main/graphphone.html"
-        with ul.urlopen(url) as client:
-            htmldata = client.read().decode('utf-8')
-        return htmldata
+        return send_file("graphphone.html")
     except Exception as e:
         logging.error("Error serving HTML: %s", e)
         abort(500, "Internal server error")
@@ -318,7 +312,7 @@ def submit_data():
     if not data:
         return jsonify({'error': 'No data provided'}), 400
 
-    expected_keys = {"Present", "duration", "wet area", "moisture","temperature", "no of faeces"}
+    expected_keys = {"Present", "duration", "wet area", "moisture","temperature", "no. of faeces"}
 
     if not expected_keys.issubset(data.keys()):
         return jsonify({'error': 'Invalid data format'}), 400

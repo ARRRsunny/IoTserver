@@ -3,108 +3,304 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MeowAi</title>=
+    <title>MeowAi Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f2f5;
-            color: #333;
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --success: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding-bottom: 60px;
+        }
+
         header {
-            background-color: #4CAF50;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
             color: white;
-            padding: 10px 0;
+            padding: 1.2rem 0;
             text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 10;
         }
+
         header h1 {
             margin: 0;
-        }
-        nav {
-            background-color: #333;
-            color: white;
+            font-size: 2.2rem;
+            font-weight: 700;
             display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
         }
+
+        header h1 i {
+            font-size: 1.8rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        nav {
+            background: white;
+            display: flex;
+            justify-content: center;
+            padding: 0.8rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
         nav a {
-            color: white;
+            color: var(--gray);
             text-decoration: none;
-            padding: 14px 20px;
+            padding: 0.8rem 1.5rem;
+            font-weight: 600;
+            border-radius: 50px;
+            margin: 0 5px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        nav a:hover {
-            background-color: #575757;
+
+        nav a:hover, nav a:focus {
+            background: var(--light);
+            color: var(--primary);
         }
+
+        nav a.active {
+            background: var(--primary);
+            color: white;
+        }
+
         main {
-            padding: 20px;
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
         }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            padding: 1.8rem;
+            margin-bottom: 2rem;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+        .card h2 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid var(--light-gray);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2 i {
+            font-size: 1.4rem;
+        }
+
+        #lasttimegone {
+            background: linear-gradient(to right, var(--accent), var(--success));
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+        }
+
         button {
-            padding: 10px 20px;
-            margin: 5px;
-            cursor: pointer;
-            background-color: #4CAF50;
+            padding: 0.85rem 1.8rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
         }
+
         button:hover {
-            background-color: #45a049;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(67, 97, 238, 0.4);
         }
-        #jsoninput {
-            margin-top: 20px;
+
+        button:active {
+            transform: translateY(0);
         }
-        #jsoninput input {
-            margin-bottom: 10px;
-            width: 100%;
-            padding: 10px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+
+        button.secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
         }
-        #graph-container, #datadis {
-            margin-top: 20px;
+
+        button.secondary:hover {
+            background: var(--light);
         }
+
+        #graph-container {
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--light);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 1rem;
+            position: relative;
+        }
+
         #graph-container img {
             max-width: 100%;
-            height: auto;
-            margin-bottom: 20px;
+            max-height: 500px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: transform 0.5s ease;
         }
-        footer {
-            background-color: #333;
-            color: white;
-            text-align: center;
-            padding: 10px 0;
-            position: fixed;
+
+        #graph-container img:hover {
+            transform: scale(1.02);
+        }
+
+        #graph-container p {
+            color: var(--gray);
+            font-style: italic;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input, select {
+            padding: 0.9rem;
+            border: 2px solid var(--light-gray);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        #datadis {
+            background: var(--light);
+            padding: 1.5rem;
+            border-radius: 12px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow: auto;
+        }
+
+        #recent-photo {
             width: 100%;
-            bottom: 0;
-            box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+            max-width: 500px;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: block;
+            margin: 1.5rem auto;
+            background: var(--light);
+            min-height: 300px;
+            object-fit: cover;
         }
-        img {
-            width: 400px; 
-            height: auto; 
-            border: 2px solid #ddd; 
-            border-radius: 5px;  
-            padding: 5px; 
-            }
+
+        .photo-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 1rem;
+        }
 
         .switch {
             position: relative;
             display: inline-block;
             width: 60px;
             height: 34px;
-            border-radius: 4px;
         }
 
-        /* Hide default HTML checkbox */
         .switch input {
             opacity: 0;
             width: 0;
             height: 0;
         }
 
-        /* The slider */
         .slider {
             position: absolute;
             cursor: pointer;
@@ -112,10 +308,9 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #ccc;
-            -webkit-transition: .4s;
+            background: #ccc;
             transition: .4s;
-            border-radius: 4px;
+            border-radius: 34px;
         }
 
         .slider:before {
@@ -125,345 +320,476 @@
             width: 26px;
             left: 4px;
             bottom: 4px;
-            background-color: white;
-            -webkit-transition: .4s;
+            background: white;
             transition: .4s;
+            border-radius: 50%;
         }
 
         input:checked + .slider {
-            background-color: #4CAF50;
-        }
-
-        input:focus + .slider {
-            box-shadow: 0 0 1px #45a049;
+            background: var(--primary);
         }
 
         input:checked + .slider:before {
-            -webkit-transform: translateX(26px);
-            -ms-transform: translateX(26px);
             transform: translateX(26px);
         }
-        .debug{
+
+        .debug {
             display: none;
         }
 
+        footer {
+            background: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 1.2rem 0;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.4s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(to right, #4CAF50, #2E7D32);
+        }
+
+        .notification.error {
+            background: linear-gradient(to right, #f44336, #c62828);
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                flex-wrap: wrap;
+            }
+            nav a {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+            .btn-group {
+                flex-direction: column;
+            }
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
+    <div id="notification" class="notification"></div>
+    
     <header>
-        <h1>Sensor Graphs</h1>
+        <h1><i class="fas fa-paw"></i> MeowAi Dashboard</h1>
     </header>
 
     <nav>
-        <a href="#graph">Graphs</a>
-        <a href="#input">Input</a>
-        <a href="#email">Email</a>
-        <a href="#data">Data</a>
-        <a href="#Photo">Photo</a>
+        <a href="#graph" class="active"><i class="fas fa-chart-line"></i> Graphs</a>
+        <a href="#input"><i class="fas fa-keyboard"></i> Input</a>
+        <a href="#email"><i class="fas fa-envelope"></i> Email</a>
+        <a href="#data"><i class="fas fa-database"></i> Data</a>
+        <a href="#Photo"><i class="fas fa-camera"></i> Photo</a>
     </nav>
 
     <main>
-        <section id="graph">
-            <h2>Graphs</h2>
-            <h4 id = "lasttimegone">last use is 0 mins before and use 0 times today</h4>
-            <button onclick="loadGraph(event, 'duration')">Load Duration Graph</button>
-            <button onclick="loadGraph(event, 'moisture')">Load Moisture Graph</button>
-            <button onclick="loadGraph(event, 'present')">Load Present Graph</button>
-            <button onclick="loadGraph(event, 'wet_area')">Load Wet Area Graph</button>
-            <button onclick="loadGraph(event, 'temperature')">Load Temperature Graph</button>
+        <section id="graph" class="card">
+            <h2><i class="fas fa-chart-bar"></i> Sensor Graphs</h2>
+            <div id="lasttimegone">Last use was 0 mins ago and used 0 times today</div>
+            
+            <div class="btn-group">
+                <button onclick="loadGraph(event, 'duration')"><i class="fas fa-clock"></i> Duration</button>
+                <button onclick="loadGraph(event, 'moisture')"><i class="fas fa-tint"></i> Moisture</button>
+                <button onclick="loadGraph(event, 'present')"><i class="fas fa-cat"></i> Presence</button>
+                <button onclick="loadGraph(event, 'wet_area')"><i class="fas fa-water"></i> Wet Area</button>
+                <button onclick="loadGraph(event, 'temperature')"><i class="fas fa-thermometer-half"></i> Temperature</button>
+            </div>
+            
             <div id="graph-container">
-                <p>Select a graph to display.</p>
+                <p>Select a graph type to display</p>
             </div>
         </section>
 
-        <section class='debug' id="input">
-            <h2>Input</h2>
-            <div id="jsoninput">
-                <input type="text" id="present" placeholder='Present (true/false)' />
-                <input type="text" id="duration" placeholder='Duration (int)' />
-                <input type="text" id="wetArea" placeholder='Wet Area (true/false)' />
-                <input type="text" id="moisture" placeholder='Moisture (float)' />
-                <input type="text" id="temperature" placeholder='Temperature (int)' />
-                <input type="text" id="no. of faeces" placeholder='no. of faeces (int)' />
-                <button onclick="sendJson(event)">Click to send</button>
-                <button onclick="clearInput(event)">Clear Inputs</button>
+        <section id="input" class="card debug">
+            <h2><i class="fas fa-edit"></i> Manual Input</h2>
+            <div class="input-group">
+                <div class="input-container">
+                    <label for="present"><i class="fas fa-cat"></i> Presence</label>
+                    <select id="present">
+                        <option value="">Select state</option>
+                        <option value="true">Detected</option>
+                        <option value="false">Not Detected</option>
+                    </select>
+                </div>
+                
+                <div class="input-container">
+                    <label for="duration"><i class="fas fa-clock"></i> Duration (sec)</label>
+                    <input type="number" id="duration" placeholder="Duration in seconds">
+                </div>
+                
+                <div class="input-container">
+                    <label for="wetArea"><i class="fas fa-water"></i> Wet Area</label>
+                    <select id="wetArea">
+                        <option value="">Select state</option>
+                        <option value="true">Detected</option>
+                        <option value="false">Not Detected</option>
+                    </select>
+                </div>
+                
+                <div class="input-container">
+                    <label for="moisture"><i class="fas fa-tint"></i> Moisture (%)</label>
+                    <input type="number" id="moisture" placeholder="Moisture percentage" step="0.1">
+                </div>
+                
+                <div class="input-container">
+                    <label for="temperature"><i class="fas fa-thermometer-half"></i> Temperature (°C)</label>
+                    <input type="number" id="temperature" placeholder="Temperature">
+                </div>
+                
+                <div class="input-container">
+                    <label for="faeces"><i class="fas fa-poop"></i> Faeces Count</label>
+                    <input type="number" id="no. of faeces" placeholder="Number of faeces">
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button onclick="sendJson(event)"><i class="fas fa-paper-plane"></i> Send Data</button>
+                <button onclick="clearInput(event)" class="secondary"><i class="fas fa-trash-alt"></i> Clear Inputs</button>
             </div>
         </section>
-        <section id="email">
-            <h2>Email</h2>
-            <div id="emailbut">
-                <input type="text" id="emailaddr" placeholder='enter email address receive report' />
-                <button onclick="sendReportToEmail(event)">Click to send email report</button>
-                <button onclick="sendEmailaddr(event)">Click to send email address</button>
+        
+        <section id="email" class="card">
+            <h2><i class="fas fa-envelope"></i> Email Reports</h2>
+            <div class="input-group">
+                <div class="input-container" style="grid-column: span 2;">
+                    <label for="emailaddr"><i class="fas fa-at"></i> Email Address</label>
+                    <input type="email" id="emailaddr" placeholder="Enter email to receive reports">
+                </div>
             </div>
-            <section class='debug' id="email_reminder">
-                <button onclick="sendReminderToEmail(event,1)">Click to LongNoUse email reminder</button>
-                <button onclick="sendReminderToEmail(event,2)">Click to TooDirty email reminder</button>
-            </section>
-        </section>
-        <section class='debug' id="data">
-            <h2>Sensor Data</h2>
-            <div>
-                <button onclick="getData(event)">Click to fetch</button>
-                <p id="datadis">Data will appear here</p>
+            
+            <div class="btn-group">
+                <button onclick="sendEmailaddr(event)"><i class="fas fa-save"></i> Save Email</button>
+                <button onclick="sendReportToEmail(event)"><i class="fas fa-paper-plane"></i> Send Report</button>
             </div>
-        </section>
-        <section id="Photo">
-            <h2>Recent Photo</h2>
-            <img id="recent-photo" alt="No photo available">
-            <div>
-                <input type="file" id="photofile" name="file">
-                <button onclick="uploadpho(event)">Click to upload Photo</button>
-                <button onclick="getphoto(event)">Click to get photo</button>
+            
+            <div id="email_reminder" class="debug">
+                <h3 style="margin: 1.5rem 0 1rem; color: var(--secondary);">Email Reminders</h3>
+                <div class="btn-group">
+                    <button onclick="sendReminderToEmail(event,1)"><i class="fas fa-hourglass-half"></i> Long No-Use Reminder</button>
+                    <button onclick="sendReminderToEmail(event,2)"><i class="fas fa-broom"></i> Cleaning Reminder</button>
+                </div>
             </div>
         </section>
-        <section id="debug">
-            <h2>Debug Mode</h2>
-            <label class="switch">
-                <input id = 'debugswitch' type="checkbox">
-                <span class="slider"></span>
-            </label>
+        
+        <section id="data" class="card debug">
+            <h2><i class="fas fa-database"></i> Sensor Data</h2>
+            <div class="btn-group">
+                <button onclick="getData(event)"><i class="fas fa-sync-alt"></i> Fetch Data</button>
+            </div>
+            <div id="datadis">No data fetched yet. Click "Fetch Data" to retrieve sensor information.</div>
+        </section>
+        
+        <section id="Photo" class="card">
+            <h2><i class="fas fa-camera"></i> Litter Box Photo</h2>
+            <img id="recent-photo" src="" alt="No photo available">
+            
+            <div class="photo-actions">
+                <input type="file" id="photofile" name="file" accept="image/*" style="display: none;">
+                <button onclick="document.getElementById('photofile').click()"><i class="fas fa-upload"></i> Choose Photo</button>
+                <button onclick="uploadpho(event)"><i class="fas fa-cloud-upload-alt"></i> Upload Photo</button>
+                <button onclick="getphoto(event)"><i class="fas fa-sync"></i> Refresh Photo</button>
+            </div>
+        </section>
+        
+        <section id="debug" class="card">
+            <h2><i class="fas fa-tools"></i> Debug Mode</h2>
+            <div class="switch-container">
+                <label class="switch">
+                    <input id="debugswitch" type="checkbox">
+                    <span class="slider"></span>
+                </label>
+                <span>Enable Debug Features</span>
+            </div>
         </section>
     </main>
 
+    <footer>
+        <p>MeowAi Dashboard &copy; 2025 | Smart Litter Box Monitoring System</p>
+    </footer>
 
     <script>
         const BASE_URL = `http://${window.location.hostname}:8080`;
+        const notificationEl = document.getElementById('notification');
 
-        const DebugSwitch = document.getElementById('debugswitch');
-        DebugSwitch.addEventListener('change', debugswitching);
-
-        function sendReminderToEmail(event,ID){
-            const request = new XMLHttpRequest();
-            request.open('GET', `${BASE_URL}/email_reminder/${ID}`, true);
-            request.onload = function() {
-                if (request.status >= 200 && request.status < 400) {
-                    console.log('Report sent successfully');
-                } else {
-                    console.error('Error sending Reminder:', request.statusText);
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            updateEmailDisplay();
+            getphoto();
+            updatalasttimegone();
+            setInterval(updatalasttimegone, 60000);
+            
+            // Setup navigation
+            setupNavigation();
+            
+            // Setup debug switch
+            const debugSwitch = document.getElementById('debugswitch');
+            debugSwitch.addEventListener('change', debugswitching);
+            
+            // Set up file input change listener
+            document.getElementById('photofile').addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    showNotification('Photo selected: ' + this.files[0].name, 'success');
                 }
-            };
-            request.onerror = function() {
-                console.error('Request failed');
-            };
-            request.send();
+            });
+        });
+
+        function showNotification(message, type) {
+            notificationEl.textContent = message;
+            notificationEl.className = `notification ${type} show`;
+            setTimeout(() => {
+                notificationEl.classList.remove('show');
+            }, 3000);
         }
-        function updatalasttimegone() {
-            const lasttimegonetext = document.getElementById('lasttimegone');
-            console.log(1)
-            fetch(`${BASE_URL}/get-lastgone`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    lasttimegonetext.textContent = `Last use was ${Math.round(data["last record time duration"])} mins ago and use ${Math.round(data["frequency"])} times today`;
-                })
-                .catch(error => {
-                    lasttimegonetext.textContent = `Error fetching data: ${error.message}`;
+
+        function setupNavigation() {
+            const navLinks = document.querySelectorAll('nav a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Scroll to section
+                    const targetId = this.getAttribute('href');
+                    document.querySelector(targetId).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                    e.preventDefault();
                 });
+            });
         }
-        updatalasttimegone();
-        setInterval(updatalasttimegone, 60000);
 
         function debugswitching(event) {
             const debugEle = document.getElementsByClassName('debug');
             for (let i = 0; i < debugEle.length; i++) {
-                if (event.target.checked) {
-                    debugEle[i].style.display = 'inline';
-                } else {
-                    debugEle[i].style.display = 'none';
-                }
+                debugEle[i].style.display = event.target.checked ? 'block' : 'none';
             }
+            showNotification(`Debug mode ${event.target.checked ? 'enabled' : 'disabled'}`, 'success');
         }
 
-
-        function uploadpho() {
-            const photoFile = document.getElementById('photofile');
-            
-            if (photoFile) {
-                const fileList = photoFile.files;
-                console.log(fileList);
-            
-                const formData = new FormData();
-                formData.append('file', fileList[0]);
-                
-                fetch(`${BASE_URL}/upload-photo/0`, {
-                    method: 'POST',
-                    body: formData,
+        function sendReminderToEmail(event, ID) {
+            if (event) event.preventDefault();
+            fetch(`${BASE_URL}/email_reminder/${ID}`)
+                .then(response => {
+                    if (response.ok) {
+                        showNotification('Reminder sent successfully!', 'success');
+                    } else {
+                        throw new Error('Server responded with error');
+                    }
                 })
+                .catch(error => {
+                    showNotification('Error sending reminder: ' + error.message, 'error');
+                });
+        }
+
+        function updatalasttimegone() {
+            fetch(`${BASE_URL}/get-lastgone`)
                 .then(response => response.json())
                 .then(data => {
-                    console.log('Success:', data);
+                    const lastTimeElement = document.getElementById('lasttimegone');
+                    if (data && data["last record time duration"] !== undefined) {
+                        lastTimeElement.textContent = 
+                            `Last use was ${Math.round(data["last record time duration"])} mins ago and used ${Math.round(data["frequency"])} times today`;
+                    }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
+                    console.error('Error updating last time:', error);
                 });
-                
-                // Make sure `getphoto` is defined
-                if (typeof getphoto === 'function') {
-                    getphoto();
-                } else {
-                    console.error('getphoto function is not defined');
-                }
-            } else {
-                console.error('photofile element not found');
-            }
         }
 
-
-
-
-        function getphoto(){
-            fetch(`${BASE_URL}/get_recphoto/0`).then(response => {
-                if(response.ok) {
-                    document.getElementById('recent-photo').src = response.url;
-                } else {
-                    document.getElementById('recent-photo').alt = 'No photo available';
-                }
+        function uploadpho(event) {
+            if (event) event.preventDefault();
+            const photoFile = document.getElementById('photofile').files[0];
+            
+            if (!photoFile) {
+                showNotification('Please select a photo first!', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', photoFile);
+            
+            fetch(`${BASE_URL}/upload-photo/0`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                showNotification('Photo uploaded successfully!', 'success');
+                getphoto();
+            })
+            .catch(error => {
+                showNotification('Error uploading photo: ' + error.message, 'error');
             });
         }
-        function loadGraph(event, graphType) {
-            event.preventDefault();
-            const container = document.getElementById('graph-container');
-            container.innerHTML = `<p>Loading ${graphType} graph...</p>`;
 
-            fetch(`${BASE_URL}/get-graph/${graphType}`)
+        function getphoto() {
+            // Add timestamp to prevent caching
+            const timestamp = new Date().getTime();
+            document.getElementById('recent-photo').src = `${BASE_URL}/get_recphoto/0?t=${timestamp}`;
+        }
+
+        function loadGraph(event, graphType) {
+            if (event) event.preventDefault();
+            const container = document.getElementById('graph-container');
+            container.innerHTML = `<p>Loading ${graphType.replace('_', ' ')} graph...</p>`;
+            
+            // Add timestamp to prevent caching
+            const timestamp = new Date().getTime();
+            const img = new Image();
+            img.src = `${BASE_URL}/get-graph/${graphType}?t=${timestamp}`;
+            
+            img.onload = function() {
+                container.innerHTML = '';
+                container.appendChild(img);
+            };
+            
+            img.onerror = function() {
+                container.innerHTML = `<p>Error loading graph. Please try again.</p>`;
+                showNotification('Failed to load graph', 'error');
+            };
+        }
+
+        function sendReportToEmail(event) {
+            if (event) event.preventDefault();
+            fetch(`${BASE_URL}/get-emailrepo`)
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
+                    if (response.ok) {
+                        showNotification('Report sent successfully!', 'success');
+                    } else {
+                        throw new Error('Failed to send report');
                     }
-                    return response.blob();
-                })
-                .then(blob => {
-                    const url = URL.createObjectURL(blob);
-                    container.innerHTML = `<img src="${url}" alt="${graphType} graph">`;
                 })
                 .catch(error => {
-                    container.innerHTML = `<p>Error loading graph: ${error.message}</p>`;
+                    showNotification('Error: ' + error.message, 'error');
                 });
-        }
-        function sendReportToEmail() {
-            const request = new XMLHttpRequest();
-            request.open('GET', `${BASE_URL}/get-emailrepo`, true);
-            request.onload = function() {
-                if (request.status >= 200 && request.status < 400) {
-                    console.log('Report sent successfully');
-                } else {
-                    console.error('Error sending report:', request.statusText);
-                }
-            };
-            request.onerror = function() {
-                console.error('Request failed');
-            };
-            request.send();
         }
 
         function updateEmailDisplay() {
+            fetch(`${BASE_URL}/getemail`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.email) {
+                        document.getElementById('emailaddr').value = data.email;
+                    }
+                })
+                .catch(error => console.error('Error fetching email:', error));
+        }
+
+        function sendEmailaddr(event) {
+            if (event) event.preventDefault();
+            const email = document.getElementById('emailaddr').value.trim();
+            
+            if (!email || !validateEmail(email)) {
+                showNotification('Please enter a valid email address', 'error');
+                return;
+            }
+            
             fetch(`${BASE_URL}/getemail`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email})
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                if (response.ok) {
+                    showNotification('Email saved successfully!', 'success');
+                } else {
+                    throw new Error('Failed to save email');
                 }
-                return response.json();
             })
-            .then(data => {
-                console.log('Success:', data);
-                const emailInput = document.getElementById('emailaddr');
-                emailInput.value = data.email || '';
-            })
-            .catch((error) => {
-                console.error('Error:', error);
+            .catch(error => {
+                showNotification('Error: ' + error.message, 'error');
             });
         }
 
-        function sendEmailaddr() {
-            const emailInput = document.getElementById('emailaddr');
-            var emailData = { "email": `${emailInput.value}` };
-            console.log(emailData)
-            fetch(`${BASE_URL}/getemail`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(emailData)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Success:', data);
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
         }
 
         function getData(event) {
-            event.preventDefault();
-            const datadis = document.getElementById('datadis');
-            datadis.innerHTML = `<p>Loading data...</p>`;
+            if (event) event.preventDefault();
+            const container = document.getElementById('datadis');
+            container.textContent = 'Loading data...';
+            
             fetch(`${BASE_URL}/get-data`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
-                    datadis.innerHTML = `<p>${JSON.stringify(data)}</p>`;
+                    container.textContent = JSON.stringify(data, null, 2);
                 })
                 .catch(error => {
-                    datadis.innerHTML = `<p>Error fetching data: ${error.message}</p>`;
+                    container.textContent = 'Error fetching data: ' + error.message;
+                    showNotification('Failed to fetch data', 'error');
                 });
         }
 
         function sendJson(event) {
-            event.preventDefault();
-            const present = document.getElementById('present').value.toLowerCase() === 'true';
-            const duration = parseInt(document.getElementById('duration').value, 10);
-            const wetArea = document.getElementById('wetArea').value.toLowerCase() === 'true';
-            const moisture = parseInt(document.getElementById('moisture').value, 10);
-            const temperature = parseInt(document.getElementById('temperature').value, 10);
-            const Nooffaeces = parseInt(document.getElementById('no. of faeces').value, 10);
+            if (event) event.preventDefault();
+            
+            // Get all values
+            const present = document.getElementById('present').value;
+            const duration = document.getElementById('duration').value;
+            const wetArea = document.getElementById('wetArea').value;
+            const moisture = document.getElementById('moisture').value;
+            const temperature = document.getElementById('temperature').value;
+            const faeces = document.getElementById('no. of faeces').value;
+            
+            // Validate required fields
+            if (!present || !duration) {
+                showNotification('Presence and Duration are required fields', 'error');
+                return;
+            }
+            
             const jsonData = {
-                "Present": present,
-                "duration": duration,
-                "wet area": wetArea,
-                "moisture": moisture,
-                "temperature": temperature,
-                "no of faeces": Nooffaeces
+                "Present": present === 'true',
+                "duration": parseInt(duration, 10),
+                "wet area": wetArea === 'true',
+                "moisture": parseFloat(moisture) || 0,
+                "temperature": parseInt(temperature, 10) || 0,
+                "no of faeces": parseInt(faeces, 10) || 0
             };
-
+            
             fetch(`${BASE_URL}/submit-data`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(jsonData)
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                if (response.ok) {
+                    showNotification('Data submitted successfully!', 'success');
+                    clearInput();
+                } else {
+                    throw new Error('Failed to submit data');
                 }
-                return response.json();
             })
-            .then(data => {
-                console.log('Success:', data);
-                clearInput();
-            })
-            .catch((error) => {
-                console.error('Error:', error);
+            .catch(error => {
+                showNotification('Error: ' + error.message, 'error');
             });
         }
 
@@ -475,8 +801,6 @@
             document.getElementById('temperature').value = '';
             document.getElementById('no. of faeces').value = '';
         }
-        updateEmailDisplay()
-        getphoto()
     </script>
 </body>
 </html>
