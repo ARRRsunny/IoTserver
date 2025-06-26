@@ -254,9 +254,11 @@ def upload_photo(type):
         filename = f"recentcap_{formatted_time}.jpg"
         if type == '0':
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            del_oldest_photo(app.config['UPLOAD_FOLDER'])
             return jsonify({'message': 'File uploaded successfully'}), 201
         elif type == '1':
             file.save(os.path.join(app.config['UPLOAD_S_FOLDER'], filename))
+            del_oldest_photo(app.config['UPLOAD_S_FOLDER'])
             return jsonify({'message': 'File uploaded successfully'}), 201
     else:
         return jsonify({'error': 'Invalid file type'}), 400
@@ -280,12 +282,23 @@ def get_recphoto(type):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+def del_oldest_photo(Path):
+    if len(os.listdir(Path)) > 10:
+        add = findOldestPho(Path)
+        os.remove(add)
+
 
 def findNearestPho(Path):
     files = os.listdir(Path)
     files = sorted(files, key=lambda x: os.path.getmtime(os.path.join(Path, x)), reverse=True)
     most_recent_file = files[0] if files else None
     return os.path.join(Path, most_recent_file),most_recent_file
+
+def findOldestPho(Path):
+    files = os.listdir(Path)
+    files = sorted(files, key=lambda x: os.path.getmtime(os.path.join(Path, x)), reverse=True)
+    most_recent_file = files[-1] if files else None
+    return os.path.join(Path, most_recent_file)
 
 #main webpage    
 @app.route('/', methods=['GET'])
