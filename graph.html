@@ -410,6 +410,17 @@
     </nav>
 
     <main>
+        <section id="Photo" class="card">
+            <h2><i class="fas fa-camera"></i> Litter Box Photo</h2>
+            <img id="recent-photo" src="" alt="No photo available">
+            
+            <div class="photo-actions">
+                <input type="file" id="photofile" name="file" accept="image/*" style="display: none;">
+                <button onclick="document.getElementById('photofile').click()"><i class="fas fa-upload"></i> Choose Photo</button>
+                <button onclick="uploadpho(event)"><i class="fas fa-cloud-upload-alt"></i> Upload Photo</button>
+                <button onclick="getphoto(event)"><i class="fas fa-sync"></i> Refresh Photo</button>
+            </div>
+        </section>
         <section id="graph" class="card">
             <h2><i class="fas fa-chart-bar"></i> Sensor Graphs</h2>
             <div id="lasttimegone">Last use was 0 mins ago and used 0 times today</div>
@@ -506,17 +517,7 @@
             <div id="datadis">No data fetched yet. Click "Fetch Data" to retrieve sensor information.</div>
         </section>
         
-        <section id="Photo" class="card">
-            <h2><i class="fas fa-camera"></i> Litter Box Photo</h2>
-            <img id="recent-photo" src="" alt="No photo available">
-            
-            <div class="photo-actions">
-                <input type="file" id="photofile" name="file" accept="image/*" style="display: none;">
-                <button onclick="document.getElementById('photofile').click()"><i class="fas fa-upload"></i> Choose Photo</button>
-                <button onclick="uploadpho(event)"><i class="fas fa-cloud-upload-alt"></i> Upload Photo</button>
-                <button onclick="getphoto(event)"><i class="fas fa-sync"></i> Refresh Photo</button>
-            </div>
-        </section>
+
         
         <section id="debug" class="card">
             <h2><i class="fas fa-tools"></i> Debug Mode</h2>
